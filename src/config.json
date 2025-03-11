@@ -1,0 +1,5 @@
+{
+  "linkedin_email": "username",
+  "linkedin_password": "password",
+  "mongodb_uri": "mongodb+srv://team_member:CS584GROUP9@cluster0.b498i.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+}
