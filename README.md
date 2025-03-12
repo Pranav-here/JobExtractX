@@ -1,6 +1,6 @@
 # Fetch Raw Data
 
-This project allows you to fetch job listings and store them in a MongoDB database using LinkedIn's API.
+This step allows you to fetch job listings and store them in a MongoDB database using LinkedIn's API.
 
 ## Getting Started
 
