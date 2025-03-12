@@ -19,7 +19,7 @@ parser.add_argument('-s', '--skip-existing', action='store_true', help="Skip job
 args = parser.parse_args()
 
 # Fetch job listings
-print("Fetching job listings")
+print("Fetching job listings", flush=True)
 job_listings = api.search_jobs('Software Engineer')
 print(f"Found {len(job_listings)} job listings")
 
@@ -27,10 +27,13 @@ print(f"Found {len(job_listings)} job listings")
 existing_job_ids = set(jobs_collection.distinct("_id"))
 
 # Create a reduced list of job listings to process
-reduced_job_listings = [
-    job for job in job_listings
-    if job["entityUrn"].split(":")[-1] not in existing_job_ids
-]
+if args.skip_existing:
+    reduced_job_listings = [
+        job for job in job_listings
+        if job["entityUrn"].split(":")[-1] not in existing_job_ids
+    ]
+else:
+    reduced_job_listings = job_listings
 
 print(f"Will process {len(reduced_job_listings)} new job listings.")
 
