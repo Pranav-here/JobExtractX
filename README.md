@@ -14,7 +14,14 @@ pip install -r requirements.txt
 
 ### 2. Configure LinkedIn Account
 
-Before running the script, you need to configure your LinkedIn account credentials. This typically involves setting up a configuration file or environment variables with your LinkedIn username and password. Ensure that your `config_setup.py` is correctly set up to handle these credentials.
+Before running the script, you need to configure your LinkedIn account credentials. This is done using environment variables, which can be set in a `.env` file in the `src` directory. The `.env` file should contain your LinkedIn email and password as follows:
+
+```
+LINKEDIN_EMAIL=your_linkedin_email@example.com
+LINKEDIN_PASSWORD=your_linkedin_password
+```
+
+- If you do not have a `.env` file, you can replace the default values in `config_setup.py` with your LinkedIn email and password directly. However, using a `.env` file is recommended for security and flexibility.
 
 ### 3. Run the Script
 
