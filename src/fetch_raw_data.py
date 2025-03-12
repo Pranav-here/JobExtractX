@@ -1,6 +1,6 @@
 """
 This script fetches job listings and company information from LinkedIn using the unofficial LinkedIn API.
-The data is then stored in MongoDB collections named 'job_raw' and 'company_raw'.
+The data is then stored in MongoDB collections named 'job_raw', 'job_detail_raw', and 'company_raw'.
 
 Configuration:
 - LinkedIn credentials are stored in 'config.json'.
@@ -17,15 +17,15 @@ Note: Ensure that 'config.json' is present in the same directory with valid Link
 """
 
 # Import necessary libraries
-import json
 from linkedin_api import Linkedin
 from pymongo import MongoClient
 from pymongo.server_api import ServerApi
 from tqdm import tqdm
+from config_loader import load_config
+from datetime import datetime
 
 # Load configuration from config file
-with open('config.json', 'r') as config_file:
-    config = json.load(config_file)
+config = load_config()
 
 # Initialize LinkedIn API
 api = Linkedin(config["linkedin_email"], config["linkedin_password"])
@@ -37,6 +37,7 @@ db = client["myDatabase"]
 # Collections
 jobs_collection = db["job_raw"]
 companies_collection = db["company_raw"]
+job_details_collection = db["job_detail_raw"]
 
 # Fetch job listings
 print("Fetching job listings")
@@ -45,23 +46,44 @@ print(f"Found {len(job_listings)} job listings")
 
 # Process each job listing with a progress bar
 for job in tqdm(job_listings, desc="Processing job listings"):
-    # Extract job ID and company information
+    # Extract job ID
     job_id = job["entityUrn"].split(":")[-1]
-    company_info = job.get("companyDetails", {}).get("companyResolutionResult", {})
 
-    # Insert job data into MongoDB
+    # Add timestamps
+    job['updated_at'] = datetime.utcnow()
+
+    # Insert job data into job_raw collection with job_id as _id
     jobs_collection.update_one(
-        {"job_id": job_id},
-        {"$set": job},
+        {"_id": job_id},
+        {"$set": job, "$setOnInsert": {"created_at": datetime.utcnow()}},
         upsert=True
     )
 
-    # Insert company data into MongoDB
+    # Fetch detailed job information
+    job_detail = api.get_job(job_id)
+
+    # Add timestamps
+    job_detail['updated_at'] = datetime.utcnow()
+
+    # Insert job detail data into job_detail_raw collection with job_id as _id
+    job_details_collection.update_one(
+        {"_id": job_id},
+        {"$set": job_detail, "$setOnInsert": {"created_at": datetime.utcnow()}},
+        upsert=True
+    )
+
+    # Extract company information from job details
+    company_info = job_detail.get("companyDetails", {}).get("companyResolutionResult", {})
     company_id = company_info.get("entityUrn", "").split(":")[-1]
+
+    # Add timestamps
+    company_info['updated_at'] = datetime.utcnow()
+
+    # Insert company data into company_raw collection with company_id as _id
     companies_collection.update_one(
-        {"company_id": company_id},
-        {"$set": company_info},
+        {"_id": company_id},
+        {"$set": company_info, "$setOnInsert": {"created_at": datetime.utcnow()}},
         upsert=True
     )
 
-print("🎉 Job and company data have been saved to MongoDB.")
+print("🎉 Job, job detail, and company data have been saved to MongoDB.")
