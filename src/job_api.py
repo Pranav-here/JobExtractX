@@ -1,9 +1,13 @@
 from pymongo import MongoClient
 from typing import Optional, List, Dict
 import re
+from config_loader import get_config
+
+# Load configuration
+config = get_config()
 
 # MongoDB connection
-client = MongoClient("mongodb+srv://team_member:CS584GROUP9@cluster0.b498i.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")
+client = MongoClient(config["mongodb_uri"])
 db = client["myDatabase"]
 
 jobs_collection = db["jobs"]
