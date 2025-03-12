@@ -1,1 +1,4 @@
+notebooks/__pycache__/
 src/config.json
+.env
+src/__pycache__/
