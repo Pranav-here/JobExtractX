@@ -1,14 +1,8 @@
-from pymongo import MongoClient
 from typing import Optional, List, Dict
 import re
-from config_loader import get_config
+from config_setup import setup_config
 
-# Load configuration
-config = get_config()
-
-# MongoDB connection
-client = MongoClient(config["mongodb_uri"])
-db = client["myDatabase"]
+config, _, client, db = setup_config()
 
 jobs_collection = db["jobs"]
 companies_collection = db["companies"]

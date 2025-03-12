@@ -1,5 +1,18 @@
 # Fetch Raw Data
 
+This project allows you to fetch job listings and store them in a MongoDB database using LinkedIn's API.
+
+## Getting Started
+
+### Clone the Repository
+
+First, clone the repository to your local machine using the following command:
+
+```bash
+git https://github.com/alexlanxy/JobExtractX.git
+cd JobExtractX
+```
+
 
 ## Setup Instructions
 
@@ -32,4 +45,5 @@ python fetch_raw_data.py -s
 ```
 
 - The `-s` flag is optional and is used to skip job IDs that already exist in the `job_raw` collection.
+
 
