@@ -1,13 +1,13 @@
 from typing import Optional, List, Dict
 import re
-from config_setup import setup_config
+from config_setup import setup_mongodb
 
-config, _, client, db = setup_config()
+db = setup_mongodb()
 
 jobs_collection = db["jobs"]
 companies_collection = db["companies"]
-for job in jobs_collection.find().limit(5):
-    print(job)
+
+
 
 def search_jobs(keyword: Optional[str] = None, location: Optional[str] = None, limit: int = 10) -> List[Dict]:
     """ Refined version of search_jobs with improved filtering logic """
@@ -51,4 +51,3 @@ def get_company(company_id: int) -> Dict:
         return company
 
     return {"error": "Company not found"}
-

@@ -14,16 +14,13 @@ def get_config():
         'mongodb_uri': "mongodb+srv://team_member:CS584GROUP9@cluster0.b498i.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
     }
 
-def setup_config():
-    # Load configuration from config file
+def setup_linkedin_api():
     config = get_config()
-
-    # Initialize LinkedIn API
     api = Linkedin(config["linkedin_email"], config["linkedin_password"])
+    return api
 
-    # Initialize MongoDB client
+def setup_mongodb():
+    config = get_config()
     client = MongoClient(config["mongodb_uri"], server_api=ServerApi('1'))
     db = client["myDatabase"]
-
-    return config, api, client, db
-
+    return db

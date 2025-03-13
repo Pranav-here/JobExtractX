@@ -1,12 +1,13 @@
 from tqdm import tqdm
-from config_setup import setup_config
+from config_setup import setup_linkedin_api, setup_mongodb
 from datetime import datetime
 from linkedin_utils import extract_company_id
 from update_raw_company import update_company_info
 import argparse
 
-# Setup configuration, LinkedIn API, and MongoDB client
-config, api, client, db = setup_config()
+
+api = setup_linkedin_api()
+db = setup_mongodb()
 
 # Collections
 jobs_collection = db["job_raw"]

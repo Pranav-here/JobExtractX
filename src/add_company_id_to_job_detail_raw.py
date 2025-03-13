@@ -1,8 +1,8 @@
-from config_setup import setup_config
+from config_setup import setup_linkedin_api, setup_mongodb
 from linkedin_utils import extract_company_id
 from tqdm import tqdm
 
-config, api, client, db = setup_config()
+api, db = setup_linkedin_api(), setup_mongodb()
 
 jobs_collection = db["job_detail_raw"]
 

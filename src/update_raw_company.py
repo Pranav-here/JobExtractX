@@ -1,8 +1,8 @@
-from config_setup import setup_config
+from config_setup import setup_linkedin_api, setup_mongodb
 from datetime import datetime
 from tqdm import tqdm
 
-config, api, client, db = setup_config()
+api, db = setup_linkedin_api(), setup_mongodb()
 companies_collection = db["company_raw"]
 
 def update_company_info(company_id):
