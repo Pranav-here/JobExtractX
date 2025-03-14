@@ -90,9 +90,6 @@ pipeline = [
         "$match": {
             "labeled_info": {"$eq": []}  
         }
-    },
-    {
-        "$limit": 100  # Limit number of jobs to label
     }
 ]
 
