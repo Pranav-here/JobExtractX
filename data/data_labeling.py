@@ -149,6 +149,3 @@ for job in tqdm(to_label_job_data, desc="Labeling job data", total=total_jobs_co
             },
             upsert=True  # Insert the document if it doesn't exist
         )
-
-
-

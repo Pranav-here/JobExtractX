@@ -3,3 +3,4 @@ pymongo
 tqdm
 dotenv
 openai
+nltk
