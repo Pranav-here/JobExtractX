@@ -39,10 +39,15 @@ To fetch job listings and store them in MongoDB, run the following command:
 
 ```bash
 cd data
-python fetch_raw_data.py -s
+python fetch_raw_data.py
 ```
 
-- The `-s` flag is optional and is used to skip job IDs that already exist in the `job_raw` collection.
+- By default, the script skips job IDs that already exist in the `job_raw` collection.
+- Use the `--all` flag to process all job IDs, including those that already exist:
+
+```bash
+python fetch_raw_data.py --all
+```
 
 
 ## Data Labeling

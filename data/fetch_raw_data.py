@@ -16,7 +16,7 @@ job_details_collection = db["job_detail_raw"]
 
 # Set up argument parser
 parser = argparse.ArgumentParser(description="Fetch job listings and store them in MongoDB.")
-parser.add_argument('-s', '--skip-existing', action='store_true', help="Skip job IDs that already exist in job_raw.")
+parser.add_argument('-a', '--all', action='store_true', help="Process all job IDs, including those that already exist in job_raw.")
 args = parser.parse_args()
 
 # Fetch job listings
@@ -28,13 +28,13 @@ print(f"Found {len(job_listings)} job listings")
 existing_job_ids = set(jobs_collection.distinct("_id"))
 
 # Create a reduced list of job listings to process
-if args.skip_existing:
+if args.all:
+    reduced_job_listings = job_listings
+else:
     reduced_job_listings = [
         job for job in job_listings
         if job["entityUrn"].split(":")[-1] not in existing_job_ids
     ]
-else:
-    reduced_job_listings = job_listings
 
 print(f"Will process {len(reduced_job_listings)} new job listings.")
 
