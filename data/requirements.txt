@@ -1,3 +1,5 @@
 linkedin-api
 pymongo
 tqdm
+dotenv
+openai
