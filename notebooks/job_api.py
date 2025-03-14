@@ -1,6 +1,6 @@
 from typing import Optional, List, Dict
 import re
-from config_setup import setup_mongodb
+from src.config_setup import setup_mongodb
 
 db = setup_mongodb()
 

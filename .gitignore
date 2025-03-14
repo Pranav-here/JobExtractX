@@ -3,3 +3,5 @@ src/config.json
 .env
 src/__pycache__/
 /review/
+/trash/
+/job_labeling.log
