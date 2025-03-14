@@ -1,7 +1,7 @@
 notebooks/__pycache__/
-src/config.json
+data/config.json
 .env
-src/__pycache__/
+data/__pycache__/
 /review/
 /trash/
 /job_labeling.log
