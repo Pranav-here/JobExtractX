@@ -1,6 +1,6 @@
 from tqdm import tqdm
 from config_setup import setup_linkedin_api, setup_mongodb
-from datetime import datetime
+from datetime import datetime, timezone
 from linkedin_utils import extract_company_id
 from update_raw_company import update_company_info
 import argparse
@@ -45,12 +45,12 @@ for job in tqdm(reduced_job_listings, desc="Processing job listings"):
     job_id = job["entityUrn"].split(":")[-1]
 
     # Add timestamps
-    job['updated_at'] = datetime.utcnow()
+    job['updated_at'] = datetime.now(timezone.utc)
 
     # Insert job data into job_raw collection with job_id as _id
     jobs_collection.update_one(
         {"_id": job_id},
-        {"$set": job, "$setOnInsert": {"created_at": datetime.utcnow()}},
+        {"$set": job, "$setOnInsert": {"created_at": datetime.now(timezone.utc)}},
         upsert=True
     )
 
@@ -64,12 +64,12 @@ for job in tqdm(reduced_job_listings, desc="Processing job listings"):
     job_detail['company_id'] = company_id
 
     # Add timestamps
-    job_detail['updated_at'] = datetime.utcnow()
+    job_detail['updated_at'] = datetime.now(timezone.utc)
 
     # Insert job detail data into job_detail_raw collection with job_id as _id
     job_details_collection.update_one(
         {"_id": job_id},
-        {"$set": job_detail, "$setOnInsert": {"created_at": datetime.utcnow()}},
+        {"$set": job_detail, "$setOnInsert": {"created_at": datetime.now(timezone.utc)}},
         upsert=True
     )
 
