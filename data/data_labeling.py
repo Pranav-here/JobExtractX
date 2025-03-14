@@ -92,7 +92,7 @@ pipeline = [
         }
     },
     {
-        "$limit": 20  # Limit number of jobs to label
+        "$limit": 100  # Limit number of jobs to label
     }
 ]
 
