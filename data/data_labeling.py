@@ -1,8 +1,9 @@
 import logging
 from config_setup import setup_deepseek, setup_mongodb
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 from tqdm import tqdm
+import os
 
 # Configure logging
 logging.basicConfig(
@@ -140,13 +141,13 @@ for job in tqdm(to_label_job_data, desc="Labeling job data", total=total_jobs_co
     
     if labeled_job:
         # Use update_one with $set and $setOnInsert
-        labeled_job["updated_at"] = datetime.utcnow()
+        labeled_job["updated_at"] = datetime.now(timezone.utc)
         labeled_job_collection.update_one(
             {"_id": id},  # Filter to find the document
             {
                 "$set": labeled_job,
                 "$setOnInsert": {
-                    "created_at": datetime.utcnow()
+                    "created_at": datetime.now(timezone.utc)
                 }
             },
             upsert=True  # Insert the document if it doesn't exist

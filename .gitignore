@@ -8,3 +8,4 @@ data/__pycache__/
 /cron_output.log
 /job_labeling.log
 /venv/
+/data/job_labeling.log
