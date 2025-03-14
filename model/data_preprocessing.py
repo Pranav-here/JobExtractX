@@ -1,8 +1,9 @@
-from config_setup import setup_mongodb
+import sys
+import os
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from data.config_setup import setup_mongodb
 import json
-import nltk
-nltk.download('punkt_tab')
-from nltk.tokenize import word_tokenize
 
 
 # Connect to MongoDB
@@ -47,6 +48,9 @@ def prepare_data():
 
 # Example usage
 if __name__ == "__main__":
+    import nltk
+    nltk.download('punkt_tab')
+    from nltk.tokenize import word_tokenize
     data_pairs = prepare_data()
     for pair in data_pairs[:1]:
         
