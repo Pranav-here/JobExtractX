@@ -6,7 +6,7 @@ from tqdm import tqdm
 
 # Configure logging
 logging.basicConfig(
-    filename='job_labeling.log',  # Log file name
+    filename=os.path.join(os.path.dirname(__file__), 'job_labeling.log'),  # Log file name
     level=logging.DEBUG,          # Log level
     format='%(asctime)s - %(levelname)s - %(message)s'  # Log format
 )

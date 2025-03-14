@@ -5,3 +5,6 @@ data/__pycache__/
 /review/
 /trash/
 /job_labeling.log
+/cron_output.log
+/job_labeling.log
+/venv/
