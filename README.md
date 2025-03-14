@@ -83,6 +83,7 @@ gantt
     title GPU and CPU Reservations Timeline (Chicago Time)
     dateFormat  YYYY-MM-DD HH:mm
     section GPUs
+    RTX_6000 :pending, 2025-03-14 12:05, 2025-03-21 12:05
     V100_2 :pending, 2025-03-15 14:00, 2025-03-22 14:00
     V100_3 :pending, 2025-03-22 14:05, 2025-03-29 14:05
     V100_4 :pending, 2025-03-29 15:15, 2025-04-05 15:15
