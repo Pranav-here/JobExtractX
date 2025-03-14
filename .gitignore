@@ -9,3 +9,4 @@ data/__pycache__/
 /job_labeling.log
 /venv/
 /data/job_labeling.log
+/data/test.py

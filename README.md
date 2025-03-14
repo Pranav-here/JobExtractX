@@ -18,10 +18,7 @@ cd JobExtractX
 
 ### 1. Install Requirements
 
-Navigate to the `data` directory and install the required Python packages:
-
 ```bash
-cd data
 pip install -r requirements.txt
 ```
 
@@ -37,10 +34,11 @@ LINKEDIN_PASSWORD=your_linkedin_password
 - If you do not have a `.env` file, you can replace the default values in `config_setup.py` with your LinkedIn email and password directly. However, using a `.env` file is recommended for security and flexibility.
 
 ### 3. Run the Script
-
+Navigate to the `data` directory.
 To fetch job listings and store them in MongoDB, run the following command:
 
 ```bash
+cd data
 python fetch_raw_data.py -s
 ```
 
@@ -51,10 +49,9 @@ python fetch_raw_data.py -s
 
 ### 1. Setup Requirements
 
-Ensure you have all necessary Python packages installed. If you haven't already, navigate to the `data` directory and install the required packages:
+Ensure you have all necessary Python packages installed. If you haven't already,install the required packages:
 
 ```bash
-cd data
 pip install -r requirements.txt
 ```
 
