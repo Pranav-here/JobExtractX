@@ -33,7 +33,7 @@ def prepare_data():
             del job['company_id']
 
 
-            input_text = f"Label the job: {job}"
+            input_text = f"{job}"
             
             # Convert labeled data to JSON string
             del label['_id']
@@ -52,9 +52,8 @@ if __name__ == "__main__":
     nltk.download('punkt_tab')
     from nltk.tokenize import word_tokenize
     data_pairs = prepare_data()
-    for pair in data_pairs[:1]:
+    for pair in data_pairs[:15]:
         
-        # Assuming pair[0] and pair[1] are strings
         tokens_0 = word_tokenize(pair[0])
         tokens_1 = word_tokenize(pair[1])
 
@@ -62,10 +61,10 @@ if __name__ == "__main__":
         print(f"Number of tokens in pair[1]: {len(tokens_1)}")
         print("-"*10)
 
-        print(pair[0])
-        print("-"*10)
-        print("-"*10)
-        print(pair[1])
+        # print(pair[0])
+        # print("-"*10)
+        # print("-"*10)
+        # print(pair[1])
 
 
 

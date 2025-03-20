@@ -7,3 +7,5 @@ nltk
 transformers
 torch
 sentencepiece
+bitsandbytes
+adapter-transformers
