@@ -106,8 +106,8 @@ val_dataset = FlanT5Dataset(val_data, tokenizer, max_source_length=max_source_le
 training_args = TrainingArguments(
     output_dir="./flan_t5_model_output",
     num_train_epochs=3,
-    per_device_train_batch_size=8,  
-    per_device_eval_batch_size=8,
+    per_device_train_batch_size=4,  
+    per_device_eval_batch_size=4,
     gradient_accumulation_steps=2, 
     evaluation_strategy="epoch",
     save_strategy="epoch",
