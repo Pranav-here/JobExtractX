@@ -120,7 +120,7 @@ training_args = TrainingArguments(
     metric_for_best_model="eval_loss",
     greater_is_better=False,
     # Memory optimization settings
-    gradient_checkpointing=False,  # Disabled since we have enough GPU memory
+    gradient_checkpointing=True,  # Disabled since we have enough GPU memory
     optim="adafactor",  # Memory-efficient optimizer
     # Weights & Biases integration
     report_to="wandb",
