@@ -13,3 +13,5 @@ data/__pycache__/
 /model/__pycache__/
 /app/node_modules/
 /app/
+/wandb/
+/t5_model_output/

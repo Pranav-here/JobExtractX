@@ -49,22 +49,69 @@ def prepare_data():
 # Example usage
 if __name__ == "__main__":
     import nltk
-    nltk.download('punkt_tab')
+    import numpy as np
+    import matplotlib.pyplot as plt
+    from collections import Counter
+    
+    try:
+        nltk.download('punkt')
+    except:
+        print("Could not download punkt, will try to use existing installation")
+    
     from nltk.tokenize import word_tokenize
+    
     data_pairs = prepare_data()
-    for pair in data_pairs[:15]:
+    
+    # Collect token counts
+    input_token_counts = []
+    output_token_counts = []
+    
+    for pair in data_pairs:
+        input_tokens = word_tokenize(pair[0])
+        output_tokens = word_tokenize(pair[1])
         
-        tokens_0 = word_tokenize(pair[0])
-        tokens_1 = word_tokenize(pair[1])
-
-        print(f"Number of tokens in pair[0]: {len(tokens_0)}")
-        print(f"Number of tokens in pair[1]: {len(tokens_1)}")
-        print("-"*10)
-
-        # print(pair[0])
-        # print("-"*10)
-        # print("-"*10)
-        # print(pair[1])
+        input_token_counts.append(len(input_tokens))
+        output_token_counts.append(len(output_tokens))
+    
+    # Calculate statistics
+    print(f"Total data pairs: {len(data_pairs)}")
+    
+    # Input token statistics
+    print("\nORIGINAL DATA TOKEN STATISTICS:")
+    print(f"Min tokens: {min(input_token_counts)}")
+    print(f"Max tokens: {max(input_token_counts)}")
+    print(f"Average tokens: {np.mean(input_token_counts):.2f}")
+    print(f"Median tokens: {np.median(input_token_counts)}")
+    print(f"25th percentile: {np.percentile(input_token_counts, 25)}")
+    print(f"75th percentile: {np.percentile(input_token_counts, 75)}")
+    
+    # Label token statistics
+    print("\nLABEL DATA TOKEN STATISTICS:")
+    print(f"Min tokens: {min(output_token_counts)}")
+    print(f"Max tokens: {max(output_token_counts)}")
+    print(f"Average tokens: {np.mean(output_token_counts):.2f}")
+    print(f"Median tokens: {np.median(output_token_counts)}")
+    print(f"25th percentile: {np.percentile(output_token_counts, 25)}")
+    print(f"75th percentile: {np.percentile(output_token_counts, 75)}")
+    
+    # Plot histograms
+    plt.figure(figsize=(12, 6))
+    
+    plt.subplot(1, 2, 1)
+    plt.hist(input_token_counts, bins=30, alpha=0.7, color='blue')
+    plt.title('Original Data Token Distribution')
+    plt.xlabel('Number of Tokens')
+    plt.ylabel('Frequency')
+    
+    plt.subplot(1, 2, 2)
+    plt.hist(output_token_counts, bins=30, alpha=0.7, color='green')
+    plt.title('Label Data Token Distribution')
+    plt.xlabel('Number of Tokens')
+    plt.ylabel('Frequency')
+    
+    plt.tight_layout()
+    plt.savefig('token_distribution.png')
+    print("\nDistribution histogram saved as 'token_distribution.png'")
 
 
 

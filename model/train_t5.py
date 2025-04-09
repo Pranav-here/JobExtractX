@@ -3,43 +3,8 @@ import torch
 from transformers import T5ForConditionalGeneration, T5Tokenizer
 from transformers import Trainer, TrainingArguments
 from torch.utils.data import Dataset
-import numpy as np
-import os
-import sys
+import wandb
 
-# Check if required packages are installed, if not install them
-required_packages = ["accelerate>=0.26.0", "protobuf", "sentencepiece"]
-missing_packages = []
-
-# Check for accelerate
-try:
-    import accelerate
-    print("Accelerate is already installed.")
-except ImportError:
-    missing_packages.append("accelerate>=0.26.0")
-
-# Check for protobuf
-try:
-    from google.protobuf.internal import builder as _builder
-    print("Protobuf is already installed.")
-except ImportError:
-    missing_packages.append("protobuf")
-
-# Check for sentencepiece
-try:
-    import sentencepiece
-    print("Sentencepiece is already installed.")
-except ImportError:
-    missing_packages.append("sentencepiece")
-
-# Install missing packages
-if missing_packages:
-    print(f"Installing missing packages: {', '.join(missing_packages)}")
-    cmd = f"{sys.executable} -m pip install {' '.join(missing_packages)}"
-    print(f"Running: {cmd}")
-    os.system(cmd)
-    print("Installation completed. Please restart the script.")
-    sys.exit(0)
 
 data_pairs = prepare_data()
 print("data set size: ", len(data_pairs))
@@ -128,7 +93,7 @@ print(f"Validation data size: {len(val_data)}")
 
 # For long sequences (1000+ tokens), configure the model and dataset accordingly
 max_source_length = 1536  # Increased for longer sequences
-max_target_length = 256   # Adjust based on your target length requirements
+max_target_length = 512   # Adjust based on your target length requirements
 
 print(f"Using max_source_length={max_source_length} and max_target_length={max_target_length}")
 
@@ -157,7 +122,12 @@ training_args = TrainingArguments(
     # Memory optimization settings
     gradient_checkpointing=True,  # Trade computation for memory
     optim="adafactor",  # Memory-efficient optimizer
+    # Weights & Biases integration
+    report_to="wandb",
 )
+
+# Initialize wandb before training
+wandb.init(project="t5-job-extraction", name="t5-job-training")
 
 # Set device
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

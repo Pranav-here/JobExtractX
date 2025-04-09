@@ -9,3 +9,6 @@ torch
 sentencepiece
 bitsandbytes
 adapter-transformers
+protobuf
+accelerate
+matplotlib
