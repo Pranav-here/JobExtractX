@@ -106,28 +106,24 @@ val_dataset = FlanT5Dataset(val_data, tokenizer, max_source_length=max_source_le
 training_args = TrainingArguments(
     output_dir="./flan_t5_model_output",
     num_train_epochs=3,
-    per_device_train_batch_size=4,  # Increased from 1 to 4
-    per_device_eval_batch_size=4,   # Increased from 1 to 4
-    gradient_accumulation_steps=4,   # Reduced from 16 to 4 since we increased batch size
+    per_device_train_batch_size=1,  # Reduced for very long sequences
+    per_device_eval_batch_size=1,
+    gradient_accumulation_steps=16,  # Increased for smaller batch size
     evaluation_strategy="epoch",
     save_strategy="epoch",
     logging_dir="./logs",
     logging_steps=50,
-    learning_rate=5e-5,             # Slightly increased learning rate to account for larger effective batch size
+    learning_rate=3e-5,
     weight_decay=0.01,
     fp16=True,  # Use mixed precision for faster training and memory savings
     load_best_model_at_end=True,
     metric_for_best_model="eval_loss",
     greater_is_better=False,
     # Memory optimization settings
-    gradient_checkpointing=True,  # Trade computation for memory
+    gradient_checkpointing=False,  # Disabled since we have enough GPU memory
     optim="adafactor",  # Memory-efficient optimizer
     # Weights & Biases integration
     report_to="wandb",
-    # Added memory optimizations
-    max_grad_norm=1.0,              # Add gradient clipping
-    dataloader_num_workers=4,       # Add parallel data loading
-    dataloader_pin_memory=True,     # Enable pinned memory for faster data transfer
 )
 
 # Initialize wandb before training
