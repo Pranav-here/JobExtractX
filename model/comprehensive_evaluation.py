@@ -65,7 +65,7 @@ def run_evaluation(num_examples=10, max_length=1024):
     """Run a comprehensive evaluation of the model with post-processing."""
     # Initialize the pipeline
     print("Initializing model pipeline...")
-    pipe = pipeline("text2text-generation", model="alexlanxy/t5-Apr-8", max_length=max_length)
+    pipe = pipeline("text2text-generation", model="alexlanxy/flan_t5_large_linkedin_no_prompt", max_length=max_length)
     
     # Load data
     print("Loading data...")
