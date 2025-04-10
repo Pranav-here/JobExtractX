@@ -93,7 +93,7 @@ print(f"Validation data size: {len(val_data)}")
 
 # For long sequences (1000+ tokens), configure the model and dataset accordingly
 max_source_length = 1536  # Increased for longer sequences
-max_target_length = 512   # Adjust based on your target length requirements
+max_target_length = 384   # Adjust based on your target length requirements
 
 print(f"Using max_source_length={max_source_length} and max_target_length={max_target_length}")
 
@@ -106,9 +106,9 @@ val_dataset = FlanT5Dataset(val_data, tokenizer, max_source_length=max_source_le
 training_args = TrainingArguments(
     output_dir="./flan_t5_model_output",
     num_train_epochs=3,
-    per_device_train_batch_size=4,  
-    per_device_eval_batch_size=4,
-    gradient_accumulation_steps=2, 
+    per_device_train_batch_size=2,  
+    per_device_eval_batch_size=2,
+    gradient_accumulation_steps=8, 
     evaluation_strategy="epoch",
     save_strategy="epoch",
     logging_dir="./logs",

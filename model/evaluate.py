@@ -67,7 +67,7 @@ for i, pair in enumerate(data_pairs[:num_examples]):
             json_match = "Expected output is JSON, generated output is not"
     except:
         json_match = "Expected output is not JSON"
-    
+    print('JSON Match: ', json_match)
     # Store result
     results.append({
         "example_id": i,
