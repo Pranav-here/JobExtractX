@@ -110,7 +110,7 @@ print(f"Training data size: {len(train_data)}")
 print(f"Validation data size: {len(val_data)}")
 
 # For long sequences (1000+ tokens), configure the model and dataset accordingly
-max_source_length = 1536  # Increased for longer sequences
+max_source_length = 1280  # Increased for longer sequences
 max_target_length = 384   # Adjust based on your target length requirements
 
 print(f"Using max_source_length={max_source_length} and max_target_length={max_target_length}")
