@@ -12,3 +12,4 @@ adapter-transformers
 protobuf
 accelerate
 matplotlib
+wandb
