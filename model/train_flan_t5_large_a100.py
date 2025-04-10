@@ -2,6 +2,8 @@ from data_preprocessing import prepare_data
 import torch
 from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
 from transformers import Trainer, TrainingArguments
+from transformers.integrations import WandbCallback
+from transformers.trainer_callback import TrainerCallback
 from torch.utils.data import Dataset
 import wandb
 
@@ -47,6 +49,10 @@ class FlanT5Dataset(Dataset):
         else:
             raise TypeError(f"Unsupported data type: {type(data_item)}")
         
+        # Ensure source and target are not empty
+        if not source_text or not target_text:
+            raise ValueError(f"Empty source or target text found at index {index}")
+            
         # Flan-T5 expects inputs with a "prefix" that defines the task
         # Using a more instruction-based prompt format
         source_text = f"Extract job information from the following text: {source_text}"
@@ -60,20 +66,32 @@ class FlanT5Dataset(Dataset):
             return_tensors="pt"
         )
         
+        # Important: don't use return_tensors="pt" here, we'll handle the conversion differently
         target_encoding = self.tokenizer(
             target_text,
             max_length=self.max_target_length,
             padding="max_length",
             truncation=True,
-            return_tensors="pt"
         )
         
         input_ids = source_encoding.input_ids.squeeze()
         attention_mask = source_encoding.attention_mask.squeeze()
-        labels = target_encoding.input_ids.squeeze()
+        
+        # Convert target_encoding to tensor and handle -100 masking properly
+        target_ids = torch.tensor(target_encoding.input_ids)
+        labels = target_ids.clone().squeeze()
         
         # Replace padding token id with -100 so it's ignored in loss computation
+        # But ensure we're not masking ALL tokens
         labels[labels == self.tokenizer.pad_token_id] = -100
+        
+        # Verify we have some valid labels
+        if (labels != -100).sum() == 0:
+            # If all are masked, unmask at least the first token to prevent zero loss
+            # This is a failsafe - the actual issue should be fixed in data preparation
+            print(f"WARNING: All labels were masked at index {index}. Unmasking first token.")
+            if len(labels) > 0:
+                labels[0] = target_ids[0]
         
         return {
             "input_ids": input_ids,
@@ -105,6 +123,7 @@ val_dataset = FlanT5Dataset(val_data, tokenizer, max_source_length=max_source_le
 # Using gradient accumulation for handling long sequences
 training_args = TrainingArguments(
     output_dir="./flan_t5_model_output",
+    run_name="flan-t5-job-extraction-run",  # Adding explicit run_name
     num_train_epochs=3,
     per_device_train_batch_size=2,  
     per_device_eval_batch_size=2,
@@ -126,6 +145,21 @@ training_args = TrainingArguments(
     report_to="wandb",
 )
 
+# Add debug code to check for label issues
+# Get a sample from the dataset to check label processing
+sample_item = train_dataset[0]
+print("\n=== DEBUGGING DATASET LABELS ===")
+print(f"Sample input shape: {sample_item['input_ids'].shape}")
+print(f"Sample attention mask shape: {sample_item['attention_mask'].shape}")
+print(f"Sample labels shape: {sample_item['labels'].shape}")
+print(f"Number of valid labels (not -100): {(sample_item['labels'] != -100).sum().item()}")
+print(f"Percentage of valid labels: {(sample_item['labels'] != -100).sum().item() / sample_item['labels'].shape[0] * 100:.2f}%")
+print("===============================\n")
+
+if (sample_item['labels'] != -100).sum().item() == 0:
+    print("WARNING: All labels are masked (-100). This will result in zero loss!")
+    print("Check your tokenization and dataset processing.")
+
 # Initialize wandb before training
 wandb.init(project="flan-t5-job-extraction", name="flan-t5-job-training")
 
@@ -136,13 +170,54 @@ print(f"Using device: {device}")
 # Move model to GPU
 model = model.to(device)
 
-# Initialize Trainer
+# Add a custom callback to monitor training more closely
+class TrainingMonitorCallback(TrainerCallback):
+    """Custom callback for monitoring training process and debugging issues."""
+    def __init__(self, trainer):
+        self.trainer = trainer
+        self.step_count = 0
+        
+    def on_step_end(self, args, state, control, **kwargs):
+        """Monitor loss and gradients after each step"""
+        self.step_count += 1
+        if self.step_count % 10 == 0:  # Check every 10 steps
+            # Get the current loss
+            if state.log_history:
+                latest_log = state.log_history[-1] if state.log_history else {}
+                loss = latest_log.get('loss', None)
+                
+                if loss is not None and loss == 0.0:
+                    print("\nWARNING: Loss is zero! This indicates an issue with the model/data.")
+                    
+                    # Check a sample batch from the training dataset
+                    if hasattr(self.trainer, 'train_dataset') and len(self.trainer.train_dataset) > 0:
+                        sample_batch = next(iter(self.trainer.get_train_dataloader()))
+                        labels = sample_batch['labels']
+                        
+                        # Check how many non-masked (-100) labels we have
+                        non_masked = (labels != -100).sum().item()
+                        total = labels.numel()
+                        print(f"Batch labels check: {non_masked}/{total} valid labels "
+                              f"({non_masked/total*100:.2f}%)")
+                
+                # Log additional info to wandb if available
+                if 'wandb' in args.report_to:
+                    wandb.log({
+                        "non_zero_loss_steps": 1 if loss and loss > 0 else 0,
+                        "custom_step": self.step_count
+                    })
+
+# Initialize Trainer with the custom callback
 trainer = Trainer(
     model=model,
     args=training_args,
     train_dataset=train_dataset,
     eval_dataset=val_dataset,
 )
+
+# Add our custom monitoring callback
+monitor_callback = TrainingMonitorCallback(trainer)
+trainer.add_callback(monitor_callback)
 
 # Start training
 print("Starting training...")
@@ -160,15 +235,34 @@ def generate_text(input_text, max_length=100):
                       return_tensors="pt", truncation=True, max_length=max_source_length)
     inputs = inputs.to(model.device)
     
+    # Using newer generation method that addresses the deprecation warning
     outputs = model.generate(
         input_ids=inputs.input_ids,
         attention_mask=inputs.attention_mask,
         max_length=max_length,
         num_beams=4,
-        early_stopping=True
+        early_stopping=True,
+        use_cache=True  # Explicitly enable caching
     )
     
     return tokenizer.decode(outputs[0], skip_special_tokens=True)
+
+# Add debug information to log model inputs and outputs
+def debug_model_io(model, tokenizer, input_text, n=3):
+    """Print input token IDs and actual tokens to help debug model issues"""
+    print("\n=== MODEL INPUT/OUTPUT DEBUGGING ===")
+    inputs = tokenizer(f"Extract job information from the following text: {input_text}", 
+                   return_tensors="pt", truncation=True, max_length=64)
+    
+    # Print first n tokens of input
+    input_ids = inputs.input_ids[0]
+    print(f"First {n} input token IDs: {input_ids[:n].tolist()}")
+    print(f"First {n} input tokens: {[tokenizer.decode([id]) for id in input_ids[:n].tolist()]}")
+    
+    # Print special token IDs for reference
+    print(f"PAD token ID: {tokenizer.pad_token_id}")
+    print(f"EOS token ID: {tokenizer.eos_token_id}")
+    print("===================================\n")
 
 # Test generation with a sample from validation data
 if len(val_data) > 0:
@@ -184,6 +278,9 @@ if len(val_data) > 0:
     else:
         test_source = str(test_item)
         test_target = "Unknown format"
+    
+    # Run the input/output debug function
+    debug_model_io(model, tokenizer, test_source[:100])
     
     print(f"\nTesting generation with sample from validation data:")
     print(f"Input: {test_source[:100]}...")
