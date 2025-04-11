@@ -4,6 +4,7 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from data.config_setup import setup_mongodb
 import json
+from collections import OrderedDict
 
 
 # Connect to MongoDB
@@ -32,14 +33,37 @@ def prepare_data():
             del job['_id']
             del job['company_id']
 
-
             input_text = f"{job}"
             
-            # Convert labeled data to JSON string
+            # Remove fields not needed in output
             del label['_id']
             del label['created_at']
             del label['updated_at']
-            output_text = json.dumps(label)
+            
+            # Create ordered dictionary with specified field order
+            ordered_label = OrderedDict([
+                ("experience_level", label.get("experience_level", "")),
+                ("employment_status", label.get("employment_status", [])),
+                ("work_location", label.get("work_location", "")),
+                ("salary", label.get("salary", {"min": "", "max": "", "period": "", "currency": ""})),
+                ("benefits", label.get("benefits", [])),
+                ("job_functions", label.get("job_functions", [])),
+                ("required_skills", label.get("required_skills", {
+                    "programming_languages": [],
+                    "tools": [],
+                    "frameworks": [],
+                    "databases": [],
+                    "other": []
+                })),
+                ("required_certifications", label.get("required_certifications", [])),
+                ("required_minimum_degree", label.get("required_minimum_degree", "")),
+                ("required_experience", label.get("required_experience", "")),
+                ("industries", label.get("industries", [])),
+                ("additional_keywords", label.get("additional_keywords", []))
+            ])
+            
+            # Convert ordered label to JSON string
+            output_text = json.dumps(ordered_label)
             
             # Append the pair
             input_output_pairs.append((input_text, output_text))
