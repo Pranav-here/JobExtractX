@@ -190,7 +190,7 @@ if (sample_item['labels'] != -100).sum().item() == 0:
     print("Check your tokenization and dataset processing.")
 
 # Initialize wandb before training
-wandb.init(project="flan-t5-job-extraction", name="flan-t5-job-training-rtx6000-prompt")
+wandb.init(project="flan-t5-job-extraction", name="flan-t5-job-training-rtx6000-prompt-ordered-fields")
 
 # Set device
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -253,7 +253,7 @@ print("Starting training...")
 trainer.train()
 
 # Save the final model
-model_path = "./flan_t5_model_final_rtx6000_prompt"
+model_path = "./flan_t5_model_final_rtx6000_prompt_ordered_fields"
 model.save_pretrained(model_path)
 tokenizer.save_pretrained(model_path)
 print(f"Model saved to {model_path}")
