@@ -9,13 +9,40 @@ import wandb
 from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
 from transformers import BitsAndBytesConfig
 import os
+import json
+from accelerate import Accelerator
 
 # Set your Hugging Face token as an environment variable
 # Replace "your_huggingface_token" with your actual token from https://huggingface.co/settings/tokens
 # You need to accept the model's terms of use on the Hugging Face website first
 os.environ["HUGGING_FACE_HUB_TOKEN"] = "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"  # Replace with your token
 
-data_pairs = prepare_data()
+# Initialize accelerator
+accelerator = Accelerator()
+
+# Define cache path for data
+CACHE_PATH = "prepared_data.json"
+
+# Only prepare data on main process and cache it
+if accelerator.is_main_process:
+    # Load from MongoDB and save to file
+    data_pairs = prepare_data()
+    
+    with open(CACHE_PATH, "w") as f:
+        json.dump(data_pairs, f)
+    print("✅ Data prepared and cached by main process.")
+
+# All processes wait for caching to complete
+accelerator.wait_for_everyone()
+
+# Now every process loads from file
+if os.path.exists(CACHE_PATH):
+    with open(CACHE_PATH, "r") as f:
+        data_pairs = json.load(f)
+    print("✅ Data loaded from shared cache.")
+else:
+    raise FileNotFoundError("❌ Cache file not found. Did main process fail?")
+
 print("data set size: ", len(data_pairs))
 
 # Print the structure of the first data item to understand its format
