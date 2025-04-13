@@ -331,6 +331,13 @@ trainer = Trainer(
 monitor_callback = TrainingMonitorCallback(trainer)
 trainer.add_callback(monitor_callback)
 
+print("Spawning DataLoader...")
+for i, batch in enumerate(trainer.get_train_dataloader()):
+    print(f"Loaded batch {i}")
+    if i == 1:
+        break
+
+
 # Start training
 print("Starting multi-node training with Accelerate DeepSpeed Plugin...")
 trainer.train()
