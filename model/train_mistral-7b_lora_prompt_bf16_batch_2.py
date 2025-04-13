@@ -97,12 +97,12 @@ class MistralDataset(Dataset):
         return len(self.data_pairs)
     
     def __getitem__(self, index):
-        # Assuming data_pairs contains tuples or dicts
+        # Assuming data_pairs contains tuples, lists, or dicts
         data_item = self.data_pairs[index]
         
-        # Check if the data is a tuple or a dict and handle accordingly
-        if isinstance(data_item, tuple):
-            # Assuming (source, target) format
+        # Check if the data is a tuple, list, or a dict and handle accordingly
+        if isinstance(data_item, (tuple, list)):
+            # Assuming (source, target) format or [source, target] format
             source_text = data_item[0]
             target_text = data_item[1]
         elif isinstance(data_item, dict):
