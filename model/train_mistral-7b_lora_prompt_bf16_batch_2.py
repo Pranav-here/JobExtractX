@@ -28,9 +28,19 @@ if accelerator.is_main_process:
     # Load from MongoDB and save to file
     data_pairs = prepare_data()
     
+    # Convert all data to consistent dictionary format
+    formatted_data = []
+    for item in data_pairs:
+        if isinstance(item, (tuple, list)):
+            formatted_data.append({"source": item[0], "target": item[1]})
+        elif isinstance(item, dict) and "source" in item and "target" in item:
+            formatted_data.append(item)  # Already in the right format
+        else:
+            raise TypeError(f"Unsupported data format: {type(item)}. Must be tuple/list with 2 elements or dict with 'source'/'target' keys")
+    
     with open(CACHE_PATH, "w") as f:
-        json.dump(data_pairs, f)
-    print("✅ Data prepared and cached by main process.")
+        json.dump(formatted_data, f)
+    print("✅ Data prepared, standardized, and cached by main process.")
 
 # All processes wait for caching to complete
 accelerator.wait_for_everyone()
@@ -97,20 +107,14 @@ class MistralDataset(Dataset):
         return len(self.data_pairs)
     
     def __getitem__(self, index):
-        # Assuming data_pairs contains tuples, lists, or dicts
+        # Data is now standardized to dictionary format
         data_item = self.data_pairs[index]
         
-        # Check if the data is a tuple, list, or a dict and handle accordingly
-        if isinstance(data_item, (tuple, list)):
-            # Assuming (source, target) format or [source, target] format
-            source_text = data_item[0]
-            target_text = data_item[1]
-        elif isinstance(data_item, dict):
-            # Handle dictionary format
-            source_text = data_item["source"]
-            target_text = data_item["target"]
-        else:
-            raise TypeError(f"Unsupported data type: {type(data_item)}")
+        if not isinstance(data_item, dict) or "source" not in data_item or "target" not in data_item:
+            raise TypeError(f"Data item at index {index} must be a dictionary with 'source' and 'target' keys")
+        
+        source_text = data_item["source"]
+        target_text = data_item["target"]
         
         # Ensure source and target are not empty
         if not source_text or not target_text:
@@ -321,16 +325,9 @@ if os.environ.get("LOCAL_RANK", "0") == "0":
     if len(val_data) > 0:
         test_item = val_data[0]
         
-        # Access source and target based on data structure
-        if isinstance(test_item, tuple):
-            test_source = test_item[0]
-            test_target = test_item[1]
-        elif isinstance(test_item, dict):
-            test_source = test_item["source"]
-            test_target = test_item["target"]
-        else:
-            test_source = str(test_item)
-            test_target = "Unknown format"
+        # Access source and target (all data is now in dictionary format)
+        test_source = test_item["source"]
+        test_target = test_item["target"]
         
         print(f"\nTesting generation with sample from validation data:")
         print(f"Input: {test_source[:100]}...")
