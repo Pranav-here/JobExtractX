@@ -11,6 +11,8 @@ from transformers import BitsAndBytesConfig
 import os
 import json
 from accelerate import Accelerator
+import random
+import numpy as np
 
 # Set your Hugging Face token as an environment variable
 # Replace "your_huggingface_token" with your actual token from https://huggingface.co/settings/tokens
@@ -19,6 +21,19 @@ os.environ["HUGGING_FACE_HUB_TOKEN"] = "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"  
 
 # Initialize accelerator
 accelerator = Accelerator()
+
+# Define seed setting function for deterministic behavior
+def set_seed(seed):
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    # For deterministic behavior on CUDA
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+
+# Set seed before any random operations to ensure consistency across nodes
+set_seed(42)  # Using a fixed seed for reproducibility
 
 # Define cache path for data
 CACHE_PATH = "prepared_data.json"
@@ -200,9 +215,11 @@ class MistralDataset(Dataset):
         }
 
 # Split data into train and validation sets (90/10 split)
+# Using fixed indices for deterministic splitting across all nodes
 train_size = int(0.9 * len(data_pairs))
 val_size = len(data_pairs) - train_size
 
+# No shuffling before split to ensure exact same split across nodes
 train_data = data_pairs[:train_size]
 val_data = data_pairs[train_size:]
 
@@ -240,6 +257,10 @@ training_args = TrainingArguments(
     optim="paged_adamw_8bit",  # Memory-efficient optimizer for LoRA
     # Weights & Biases integration
     report_to="wandb",
+    # Set seed for reproducibility
+    seed=42,
+    # Ensure deterministic DataLoader behavior
+    dataloader_num_workers=1,
     # No deepspeed parameter - letting Accelerate handle it from the config
 )
 
