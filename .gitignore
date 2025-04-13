@@ -16,3 +16,4 @@ data/__pycache__/
 /wandb/
 /t5_model_output/
 /t5_model_final/
+.deepspeed_env

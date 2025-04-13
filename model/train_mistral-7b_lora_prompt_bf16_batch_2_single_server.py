@@ -14,6 +14,7 @@ import os
 # Replace "your_huggingface_token" with your actual token from https://huggingface.co/settings/tokens
 # You need to accept the model's terms of use on the Hugging Face website first
 os.environ["HUGGING_FACE_HUB_TOKEN"] = "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"  # Replace with your token
+os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
 
 data_pairs = prepare_data()
 print("data set size: ", len(data_pairs))
@@ -190,11 +191,11 @@ val_dataset = MistralDataset(val_data, tokenizer, max_length=max_length)
 # Set up training arguments - matched to your Accelerate config settings
 training_args = TrainingArguments(
     output_dir="./mistral_7b_lora_output",
-    run_name="mistral-7b-lora-job-extraction-multi-node",
+    run_name="mistral-7b-lora-job-extraction-single-node",
     num_train_epochs=3,
-    per_device_train_batch_size=2,  
-    per_device_eval_batch_size=2,
-    gradient_accumulation_steps=8, 
+    per_device_train_batch_size=1,  # Reduced batch size from 2 to 1
+    per_device_eval_batch_size=1,  # Reduced batch size from 2 to 1
+    gradient_accumulation_steps=16,  # Increased from 8 to 16
     evaluation_strategy="epoch",
     save_strategy="epoch",
     logging_dir="./logs",
@@ -209,7 +210,6 @@ training_args = TrainingArguments(
     optim="paged_adamw_8bit",  # Memory-efficient optimizer for LoRA
     # Weights & Biases integration
     report_to="wandb",
-    # No deepspeed parameter - letting Accelerate handle it from the config
 )
 
 # Add debug code to check for label issues
@@ -226,9 +226,8 @@ if (sample_item['labels'] != -100).sum().item() == 0:
     print("WARNING: All labels are masked (-100). This will result in zero loss!")
     print("Check your tokenization and dataset processing.")
 
-# Initialize wandb before training - only on main process
-if os.environ.get("LOCAL_RANK", "0") == "0":
-    wandb.init(project="flan-t5-job-extraction", name="mistral-7b-lora-training-multi-node")
+# Initialize wandb before training
+wandb.init(project="flan-t5-job-extraction", name="mistral-7b-lora-training-single-node")
 
 # Add a custom callback to monitor training more closely
 class TrainingMonitorCallback(TrainerCallback):
@@ -261,7 +260,7 @@ class TrainingMonitorCallback(TrainerCallback):
                               f"({non_masked/total*100:.2f}%)")
                 
                 # Log additional info to wandb if available
-                if 'wandb' in args.report_to and os.environ.get("LOCAL_RANK", "0") == "0":
+                if 'wandb' in args.report_to:
                     wandb.log({
                         "non_zero_loss_steps": 1 if loss and loss > 0 else 0,
                         "custom_step": self.step_count
@@ -280,84 +279,83 @@ monitor_callback = TrainingMonitorCallback(trainer)
 trainer.add_callback(monitor_callback)
 
 # Start training
-print("Starting multi-node training with Accelerate DeepSpeed Plugin...")
+print("Starting single-node training...")
 trainer.train()
 
-# Save the final model (only on the main process)
-if os.environ.get("LOCAL_RANK", "0") == "0":
-    model_path = "./mistral_7b_lora_final"
-    model.save_pretrained(model_path)
-    tokenizer.save_pretrained(model_path)
-    print(f"Model saved to {model_path}")
+# Save the final model
+model_path = "./mistral_7b_lora_final"
+model.save_pretrained(model_path)
+tokenizer.save_pretrained(model_path)
+print(f"Model saved to {model_path}")
 
-    # Test generation with a sample from validation data
-    if len(val_data) > 0:
-        test_item = val_data[0]
-        
-        # Access source and target based on data structure
-        if isinstance(test_item, tuple):
-            test_source = test_item[0]
-            test_target = test_item[1]
-        elif isinstance(test_item, dict):
-            test_source = test_item["source"]
-            test_target = test_item["target"]
-        else:
-            test_source = str(test_item)
-            test_target = "Unknown format"
-        
-        print(f"\nTesting generation with sample from validation data:")
-        print(f"Input: {test_source[:100]}...")
-        
-        # Generate text with Mistral
-        schema = """
-        {
-            "experience_level": "",
-            "employment_status": [],
-            "work_location": "",
-            "salary": {"min": "", "max": "", "period": "", "currency": ""},
-            "benefits": [],
-            "job_functions": [],
-            "required_skills": {
-                "programming_languages": [],
-                "tools": [],
-                "frameworks": [],
-                "databases": [],
-                "other": []
-            },
-            "required_certifications": [],
-            "required_minimum_degree": "",
-            "required_experience": "",
-            "industries": [],
-            "additional_keywords": []
-            }
-        """
-        
-        messages = [
-            {"role": "user", "content": f"Label the following job posting in pure JSON format based on this example schema. If no information for a field, leave the field blank.\n\nExample schema:\n{schema}\n\nJob posting:\n{test_source}"}
-        ]
-        
-        prompt_text = tokenizer.apply_chat_template(
-            messages,
-            add_generation_prompt=True,
-            return_tensors=None
-        )
-        
-        inputs = tokenizer(prompt_text, return_tensors="pt", truncation=True, max_length=max_length)
-        inputs = inputs.to(model.device)
-        
-        outputs = model.generate(
-            input_ids=inputs.input_ids,
-            attention_mask=inputs.attention_mask,
-            max_new_tokens=384,
-            temperature=0.7,
-            top_p=0.9,
-            do_sample=True
-        )
-        
-        generated = tokenizer.decode(outputs[0], skip_special_tokens=True)
-        print(f"Generated: {generated}")
-        print(f"Expected: {test_target}")
-        
-    # Finish wandb if it was initialized
-    if wandb.run is not None:
-        wandb.finish() 
+# Test generation with a sample from validation data
+if len(val_data) > 0:
+    test_item = val_data[0]
+    
+    # Access source and target based on data structure
+    if isinstance(test_item, tuple):
+        test_source = test_item[0]
+        test_target = test_item[1]
+    elif isinstance(test_item, dict):
+        test_source = test_item["source"]
+        test_target = test_item["target"]
+    else:
+        test_source = str(test_item)
+        test_target = "Unknown format"
+    
+    print(f"\nTesting generation with sample from validation data:")
+    print(f"Input: {test_source[:100]}...")
+    
+    # Generate text with Mistral
+    schema = """
+    {
+        "experience_level": "",
+        "employment_status": [],
+        "work_location": "",
+        "salary": {"min": "", "max": "", "period": "", "currency": ""},
+        "benefits": [],
+        "job_functions": [],
+        "required_skills": {
+            "programming_languages": [],
+            "tools": [],
+            "frameworks": [],
+            "databases": [],
+            "other": []
+        },
+        "required_certifications": [],
+        "required_minimum_degree": "",
+        "required_experience": "",
+        "industries": [],
+        "additional_keywords": []
+        }
+    """
+    
+    messages = [
+        {"role": "user", "content": f"Label the following job posting in pure JSON format based on this example schema. If no information for a field, leave the field blank.\n\nExample schema:\n{schema}\n\nJob posting:\n{test_source}"}
+    ]
+    
+    prompt_text = tokenizer.apply_chat_template(
+        messages,
+        add_generation_prompt=True,
+        return_tensors=None
+    )
+    
+    inputs = tokenizer(prompt_text, return_tensors="pt", truncation=True, max_length=max_length)
+    inputs = inputs.to(model.device)
+    
+    outputs = model.generate(
+        input_ids=inputs.input_ids,
+        attention_mask=inputs.attention_mask,
+        max_new_tokens=384,
+        temperature=0.7,
+        top_p=0.9,
+        do_sample=True
+    )
+    
+    generated = tokenizer.decode(outputs[0], skip_special_tokens=True)
+    print(f"Generated: {generated}")
+    print(f"Expected: {test_target}")
+    
+# Finish wandb if it was initialized
+if wandb.run is not None:
+    wandb.finish() 
