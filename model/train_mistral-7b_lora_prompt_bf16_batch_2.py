@@ -14,13 +14,6 @@ import os
 # Replace "your_huggingface_token" with your actual token from https://huggingface.co/settings/tokens
 # You need to accept the model's terms of use on the Hugging Face website first
 os.environ["HUGGING_FACE_HUB_TOKEN"] = "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"  # Replace with your token
-os.environ["NCCL_PORT_RANGE"] = "50000-52000"
-
-# Add NCCL debug settings
-os.environ["NCCL_DEBUG"] = "INFO"
-os.environ["NCCL_IB_DISABLE"] = "1"
-os.environ["NCCL_SOCKET_IFNAME"] = "^lo,docker"
-os.environ["NCCL_BLOCKING_WAIT"] = "1"
 
 data_pairs = prepare_data()
 print("data set size: ", len(data_pairs))
