@@ -1,4 +1,5 @@
 from accelerate import Accelerator
+from accelerate.utils import DeepSpeedPlugin
 import torch
 import torch.nn as nn
 import os
@@ -56,16 +57,18 @@ def main():
         print("Starting multi-node DeepSpeed test...")
         sys.stdout.flush()
         
-        # Initialize Accelerator with minimal DeepSpeed config
-        # Use ZeRO-1 instead of ZeRO-2 and disable optimizer offloading
+        # Initialize DeepSpeed plugin correctly
+        ds_plugin = DeepSpeedPlugin(
+            zero_stage=1,  # Changed from stage 2 to stage 1
+            offload_optimizer=False,  # Changed from CPU offload
+            offload_parameters=False,
+            gradient_accumulation_steps=1,  # Reduced from 8
+        )
+        
+        # Initialize Accelerator with the plugin
         accelerator = Accelerator(
             mixed_precision="bf16",
-            gradient_accumulation_steps=1,  # Reduced from 8
-            deepspeed_plugin={
-                "zero_stage": 1,  # Changed from stage 2 to stage 1
-                "offload_optimizer": False,  # Changed from CPU offload
-                "offload_param": False
-            }
+            deepspeed_plugin=ds_plugin
         )
         
         # Get distributed information
