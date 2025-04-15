@@ -13,14 +13,35 @@ import json
 from accelerate import Accelerator
 import random
 import numpy as np
+from accelerate.utils import DeepSpeedPlugin
+import sys
+
+# Configure NCCL for better stability
+os.environ["NCCL_TIMEOUT"] = "30"  # 30 seconds timeout
+os.environ["NCCL_SOCKET_NTHREADS"] = "4"
+os.environ["NCCL_DEBUG"] = "INFO"
 
 # Set your Hugging Face token as an environment variable
 # Replace "your_huggingface_token" with your actual token from https://huggingface.co/settings/tokens
 # You need to accept the model's terms of use on the Hugging Face website first
 os.environ["HUGGING_FACE_HUB_TOKEN"] = "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"  # Replace with your token
 
-# Initialize accelerator
-accelerator = Accelerator()
+# Initialize DeepSpeed plugin with our working configuration
+ds_plugin = DeepSpeedPlugin(
+    zero_stage=2,  # Use ZeRO Stage 2 for model parameter sharding
+    offload_optimizer_device="cpu",  # Offload optimizer states to CPU
+    offload_param_device="none",    # Don't offload parameters
+    gradient_accumulation_steps=8,
+)
+
+# Initialize accelerator with the plugin
+accelerator = Accelerator(
+    mixed_precision="bf16",
+    deepspeed_plugin=ds_plugin
+)
+
+print(f"Initialized accelerator with DeepSpeed plugin, ZeRO Stage {ds_plugin.zero_stage}")
+sys.stdout.flush()
 
 # Define seed setting function for deterministic behavior
 def set_seed(seed):
@@ -412,4 +433,4 @@ if os.environ.get("LOCAL_RANK", "0") == "0":
         
     # Finish wandb if it was initialized
     if wandb.run is not None:
-        wandb.finish() 
+        wandb.finish()
