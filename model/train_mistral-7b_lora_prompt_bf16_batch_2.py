@@ -20,6 +20,7 @@ import sys
 os.environ["NCCL_TIMEOUT"] = "30"  # 30 seconds timeout
 os.environ["NCCL_SOCKET_NTHREADS"] = "4"
 os.environ["NCCL_DEBUG"] = "INFO"
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 # Set your Hugging Face token as an environment variable
 # Replace "your_huggingface_token" with your actual token from https://huggingface.co/settings/tokens
