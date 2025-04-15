@@ -57,11 +57,12 @@ def main():
         print("Starting multi-node DeepSpeed test...")
         sys.stdout.flush()
         
-        # Initialize DeepSpeed plugin correctly
+        # Initialize DeepSpeed plugin correctly with proper parameter names
+        # Based on the documentation at https://huggingface.co/docs/accelerate/en/package_reference/deepspeed
         ds_plugin = DeepSpeedPlugin(
             zero_stage=1,  # Changed from stage 2 to stage 1
-            offload_optimizer=False,  # Changed from CPU offload
-            offload_parameters=False,
+            offload_optimizer_device="none",  # Use correct parameter name
+            offload_param_device="none",     # Use correct parameter name
             gradient_accumulation_steps=1,  # Reduced from 8
         )
         
