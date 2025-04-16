@@ -70,7 +70,12 @@ def run_evaluation(num_examples=10, max_length=1024):
     # Load data
     print("Loading data...")
     data_pairs = prepare_data()
-    print(f"Loaded {len(data_pairs)} data pairs for evaluation")
+    print(f"Loaded {len(data_pairs)} data pairs")
+    
+    # Use only the last 10% of data for evaluation (ensuring it's different from training data)
+    eval_start_idx = int(len(data_pairs) * 0.9)
+    evaluation_data = data_pairs[eval_start_idx:]
+    print(f"Using {len(evaluation_data)} examples from the last 10% of data for evaluation")
     
     # Create a timestamp for this evaluation run
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -80,7 +85,7 @@ def run_evaluation(num_examples=10, max_length=1024):
     results = []
     
     # Process subset for examples
-    sample_count = min(num_examples, len(data_pairs))
+    sample_count = min(num_examples, len(evaluation_data))
     print(f"\nGenerating and evaluating outputs for {sample_count} examples...")
     
     # Track metrics
@@ -88,7 +93,7 @@ def run_evaluation(num_examples=10, max_length=1024):
     coverage_values = []
     accuracy_values = []
     
-    for i, pair in enumerate(data_pairs[:sample_count]):
+    for i, pair in enumerate(evaluation_data[:sample_count]):
         print(f"\nExample {i+1}/{sample_count}")
         input_text = pair[0]
         expected_output = pair[1]
@@ -205,4 +210,4 @@ if __name__ == "__main__":
         print(f"Running comprehensive evaluation with {num_examples} examples")
         print("="*70)
         
-        run_evaluation(num_examples=num_examples, max_length=1024) 
+        run_evaluation(num_examples=num_examples, max_length=1024)

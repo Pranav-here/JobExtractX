@@ -15,7 +15,7 @@ training_collection = db["training_preparation"]
 labeled_job_collection = db["labeled_job_data"]
 
 
-def prepare_data():
+def prepare_data(prompt=False):
     # Retrieve data from MongoDB
     original_data = list(training_collection.find())
     labeled_data = list(labeled_job_collection.find())
@@ -64,6 +64,37 @@ def prepare_data():
             
             # Convert ordered label to JSON string
             output_text = json.dumps(ordered_label)
+            
+            # If prompt is True, format the input text with schema
+            if prompt:
+                schema = """
+                {
+                    "experience_level": "",
+                    "employment_status": [],
+                    "work_location": "",
+                    "salary": {"min": "", "max": "", "period": "", "currency": ""},
+                    "benefits": [],
+                    "job_functions": [],
+                    "required_skills": {
+                        "programming_languages": [],
+                        "tools": [],
+                        "frameworks": [],
+                        "databases": [],
+                        "other": []
+                    },
+                    "required_certifications": [],
+                    "required_minimum_degree": "",
+                    "required_experience": "",
+                    "industries": [],
+                    "additional_keywords": []
+                }
+                """
+                input_text = (
+                    f"Label the following job posting in pure JSON format based on this example schema. "
+                    f"If no information for a field, leave the field blank.\n\n"
+                    f"Example schema:\n{schema}\n\n"
+                    f"Job posting:\n{input_text}"
+                )
             
             # Append the pair
             input_output_pairs.append((input_text, output_text))

@@ -22,7 +22,12 @@ model = AutoModelForSeq2SeqLM.from_pretrained("alexlanxy/t5-Apr-8")
 # Load data
 print("Loading data...")
 data_pairs = prepare_data()
-print(f"Loaded {len(data_pairs)} data pairs for evaluation")
+print(f"Loaded {len(data_pairs)} data pairs")
+
+# Use only the last 10% of data for evaluation (ensuring it's different from training data)
+eval_start_idx = int(len(data_pairs) * 0.9)
+evaluation_data = data_pairs[eval_start_idx:]
+print(f"Using {len(evaluation_data)} examples from the last 10% of data for evaluation")
 
 # Create a timestamp for this evaluation run
 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -32,10 +37,10 @@ results_file = os.path.join(results_dir, f"evaluation_results_{timestamp}.json")
 results = []
 
 # Process a subset for example (adjust as needed)
-num_examples = min(10, len(data_pairs))
+num_examples = min(10, len(evaluation_data))
 print(f"\nGenerating outputs for {num_examples} examples...")
 
-for i, pair in enumerate(data_pairs[:num_examples]):
+for i, pair in enumerate(evaluation_data[:num_examples]):
     print(f"\nExample {i+1}/{num_examples}")
     input_text = pair[0]
     expected_output = pair[1]
