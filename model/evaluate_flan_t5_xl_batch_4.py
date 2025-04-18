@@ -337,7 +337,7 @@ def calculate_metrics(results):
     return metrics
 
 # Function to evaluate model on test examples
-def evaluate_model(model, tokenizer, test_data, max_source_length=1536, max_target_length=384, num_examples=10):
+def evaluate_model(model, tokenizer, test_data, max_source_length=1536, max_target_length=384, num_examples=1000):
     results = []
     
     for i, data_item in tqdm(enumerate(test_data[:num_examples]), total=min(num_examples, len(test_data)), desc="Evaluating model"):
@@ -424,9 +424,12 @@ if __name__ == "__main__":
     with open('prepared_data.json', 'r') as f:
         data_pairs = json.load(f)
     
-    # Use last 100 examples as test data
-    test_data = data_pairs[-100:]
-    print(f"Loaded {len(data_pairs)} examples, using {len(test_data)} for testing")
+    # Use only the last 10% of the data for evaluation (since first 90% was used for training)
+    total_samples = len(data_pairs)
+    test_start_idx = int(total_samples * 0.9)  # Start at 90% mark
+    test_data = data_pairs[test_start_idx:]
+    
+    print(f"Loaded {len(data_pairs)} examples, using {len(test_data)} for testing (last 10%)")
     
     # Set device
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
