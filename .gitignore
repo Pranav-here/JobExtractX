@@ -17,3 +17,4 @@ data/__pycache__/
 /t5_model_output/
 /t5_model_final/
 .deepspeed_env
+/evaluate/__pycache__
