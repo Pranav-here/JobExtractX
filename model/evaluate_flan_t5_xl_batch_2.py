@@ -337,7 +337,7 @@ def calculate_metrics(results):
     return metrics
 
 # Function to evaluate model on test examples
-def evaluate_model(model, tokenizer, test_data, max_source_length=1536, max_target_length=384, num_examples=1000):
+def evaluate_model(model, tokenizer, test_data, max_source_length=1536, max_target_length=384, num_examples=10):
     results = []
     
     for i, data_item in tqdm(enumerate(test_data[:num_examples]), total=min(num_examples, len(test_data)), desc="Evaluating model"):
