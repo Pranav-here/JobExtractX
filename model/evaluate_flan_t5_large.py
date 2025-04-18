@@ -423,10 +423,8 @@ if __name__ == "__main__":
     with open('prepared_data.json', 'r') as f:
         data_pairs = json.load(f)
     
-    # Use only the last 10% of the data for evaluation (since first 90% was used for training)
-    total_samples = len(data_pairs)
-    test_start_idx = int(total_samples * 0.9)  # Start at 90% mark
-    test_data = data_pairs[test_start_idx:]
+
+    test_data = data_pairs
     
     print(f"Loaded {len(data_pairs)} examples, using {len(test_data)} for testing (last 10%)")
     

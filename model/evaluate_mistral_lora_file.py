@@ -69,11 +69,6 @@ print("\nSample input data structure:")
 print(f"Input (first 200 chars): {data_pairs[0][0][:200]}...")
 print(f"Expected output (first 200 chars): {data_pairs[0][1][:200]}...")
 
-# Use only the last 10% of the data for evaluation (since first 90% was used for training)
-total_samples = len(data_pairs)
-test_start_idx = int(total_samples * 0.9)  # Start at 90% mark
-data_pairs = data_pairs[test_start_idx:]
-print(f"Using last 10% of data ({len(data_pairs)} items) for evaluation")
 
 # Select random samples for evaluation from the test set
 # Use a fixed seed for reproducibility
