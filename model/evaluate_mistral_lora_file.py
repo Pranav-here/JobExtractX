@@ -14,6 +14,10 @@ from collections import Counter
 results_dir = "evaluation_results"
 os.makedirs(results_dir, exist_ok=True)
 
+# Create specific subdirectory for mistral lora evaluations
+mistral_lora_results_dir = os.path.join(results_dir, "mistral_lora_eval")
+os.makedirs(mistral_lora_results_dir, exist_ok=True)
+
 # Set your Hugging Face token as an environment variable
 # You need to accept the model's terms of use on the Hugging Face website first
 os.environ["HUGGING_FACE_HUB_TOKEN"] = "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"  # Your token
@@ -454,7 +458,7 @@ results_with_metrics = {
 
 # Save results and metrics
 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-results_file = f"{results_dir}/mistral_lora_eval_{timestamp}.json"
+results_file = f"{mistral_lora_results_dir}/mistral_lora_eval_{timestamp}.json"
 with open(results_file, "w") as f:
     json.dump(results_with_metrics, f, indent=2)
 

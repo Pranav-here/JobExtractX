@@ -15,3 +15,5 @@ matplotlib
 wandb
 peft
 deepspeed
+seaborn
+pandas
