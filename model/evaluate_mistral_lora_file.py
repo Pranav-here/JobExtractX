@@ -7,6 +7,8 @@ from datetime import datetime
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 from peft import PeftModel
 import re
+import numpy as np
+from collections import Counter
 
 # Create results directory if it doesn't exist
 results_dir = "evaluation_results"
@@ -75,6 +77,191 @@ num_eval_samples = min(2, len(data_pairs))  # Use up to 10 samples
 eval_samples = random.sample(data_pairs, num_eval_samples)
 print(f"Selected {len(eval_samples)} samples for evaluation")
 
+# Let's enhance the comparison function for better metrics
+def calculate_metrics(results):
+    """Calculate comprehensive metrics for the evaluation"""
+    if not results:
+        return {}
+    
+    metrics = {
+        "overall": {
+            "total_samples": len(results),
+            "successful_parses": sum(1 for r in results if r["parsed_successfully"]),
+            "parse_rate": 0.0
+        },
+        "field_metrics": {},
+        "list_field_metrics": {},
+        "nested_field_metrics": {}
+    }
+    
+    # Calculate parse rate
+    metrics["overall"]["parse_rate"] = metrics["overall"]["successful_parses"] / metrics["overall"]["total_samples"]
+    
+    # Skip metrics if no successful parses
+    if metrics["overall"]["successful_parses"] == 0:
+        return metrics
+    
+    # Track metrics for each field
+    field_presence = {}  # How often field was populated vs empty
+    field_accuracy = {}  # How often field matched exactly
+    field_counts = {}    # How many samples had this field
+    
+    # For list fields 
+    list_precision = {}  # How many generated items were correct
+    list_recall = {}     # How many expected items were found
+    list_f1 = {}         # Harmonic mean of precision and recall
+    
+    # Process each result
+    for result in results:
+        if not result["parsed_successfully"]:
+            continue
+            
+        try:
+            generated = json.loads(result["generated_json"])
+            expected = json.loads(result["expected_json"])
+            
+            # Process simple string fields
+            string_fields = ["experience_level", "work_location", "required_minimum_degree", "required_experience"]
+            for field in string_fields:
+                if field not in field_counts:
+                    field_counts[field] = 0
+                    field_presence[field] = 0
+                    field_accuracy[field] = 0
+                
+                field_counts[field] += 1
+                
+                # Track if field has content
+                if field in generated and generated[field] and generated[field] != "":
+                    field_presence[field] += 1
+                
+                # Track exact matches
+                if (field in generated and field in expected and 
+                    str(generated[field]).lower() == str(expected[field]).lower()):
+                    field_accuracy[field] += 1
+            
+            # Process list fields
+            list_fields = ["employment_status", "benefits", "job_functions", 
+                          "required_certifications", "industries", "additional_keywords"]
+            
+            for field in list_fields:
+                if field not in list_precision:
+                    list_precision[field] = []
+                    list_recall[field] = []
+                    list_f1[field] = []
+                
+                # Convert to sets for easier comparison, case-insensitive
+                gen_set = set(item.lower() for item in generated.get(field, []) if item)
+                exp_set = set(item.lower() for item in expected.get(field, []) if item)
+                
+                # Calculate metrics
+                if gen_set or exp_set:  # Only if at least one set has items
+                    true_positives = len(gen_set.intersection(exp_set))
+                    
+                    precision = true_positives / len(gen_set) if gen_set else 0
+                    recall = true_positives / len(exp_set) if exp_set else 0
+                    
+                    # F1 score
+                    f1 = 2 * precision * recall / (precision + recall) if (precision + recall) > 0 else 0
+                    
+                    list_precision[field].append(precision)
+                    list_recall[field].append(recall)
+                    list_f1[field].append(f1)
+            
+            # Special handling for nested structure: required_skills
+            if "required_skills" in generated and "required_skills" in expected:
+                gen_skills = generated["required_skills"]
+                exp_skills = expected["required_skills"]
+                
+                skill_categories = ["programming_languages", "tools", "frameworks", "databases", "other"]
+                
+                for category in skill_categories:
+                    field_key = f"skills_{category}"
+                    if field_key not in list_precision:
+                        list_precision[field_key] = []
+                        list_recall[field_key] = []
+                        list_f1[field_key] = []
+                    
+                    # Convert to sets for comparison
+                    gen_set = set(item.lower() for item in gen_skills.get(category, []) if item)
+                    exp_set = set(item.lower() for item in exp_skills.get(category, []) if item)
+                    
+                    # Calculate metrics
+                    if gen_set or exp_set:
+                        true_positives = len(gen_set.intersection(exp_set))
+                        
+                        precision = true_positives / len(gen_set) if gen_set else 0
+                        recall = true_positives / len(exp_set) if exp_set else 0
+                        
+                        # F1 score
+                        f1 = 2 * precision * recall / (precision + recall) if (precision + recall) > 0 else 0
+                        
+                        list_precision[field_key].append(precision)
+                        list_recall[field_key].append(recall)
+                        list_f1[field_key].append(f1)
+                
+                # Special handling for salary field
+                if "salary" in generated and "salary" in expected:
+                    # Count number of salary components that match
+                    salary_fields = ["min", "max", "period", "currency"]
+                    for sal_field in salary_fields:
+                        field_key = f"salary_{sal_field}"
+                        if field_key not in field_counts:
+                            field_counts[field_key] = 0
+                            field_presence[field_key] = 0
+                            field_accuracy[field_key] = 0
+                        
+                        field_counts[field_key] += 1
+                        
+                        gen_val = generated["salary"].get(sal_field, "")
+                        exp_val = expected["salary"].get(sal_field, "")
+                        
+                        if gen_val and gen_val != "":
+                            field_presence[field_key] += 1
+                        
+                        if str(gen_val).lower() == str(exp_val).lower():
+                            field_accuracy[field_key] += 1
+                
+        except Exception as e:
+            print(f"Error calculating metrics: {str(e)}")
+            continue
+    
+    # Calculate averages for string fields
+    for field in field_counts:
+        if field_counts[field] > 0:
+            presence_rate = field_presence[field] / field_counts[field]
+            accuracy_rate = field_accuracy[field] / field_counts[field]
+            
+            metrics["field_metrics"][field] = {
+                "presence_rate": presence_rate,
+                "accuracy_rate": accuracy_rate,
+                "count": field_counts[field]
+            }
+    
+    # Calculate averages for list fields
+    for field in list_precision:
+        if list_precision[field]:
+            avg_precision = np.mean(list_precision[field])
+            avg_recall = np.mean(list_recall[field])
+            avg_f1 = np.mean(list_f1[field])
+            
+            metrics["list_field_metrics"][field] = {
+                "precision": avg_precision,
+                "recall": avg_recall,
+                "f1_score": avg_f1,
+                "count": len(list_precision[field])
+            }
+    
+    # Calculate overall extraction quality (average F1 across all list fields)
+    all_f1_scores = []
+    for field_metrics in metrics["list_field_metrics"].values():
+        all_f1_scores.append(field_metrics["f1_score"])
+    
+    if all_f1_scores:
+        metrics["overall"]["mean_f1_score"] = np.mean(all_f1_scores)
+    else:
+        metrics["overall"]["mean_f1_score"] = 0.0
+    
+    return metrics
 
 # Results container
 results = []
@@ -234,13 +421,44 @@ successful_parses = sum(1 for r in results if r["parsed_successfully"])
 print(f"\nEvaluation complete!")
 print(f"Successfully parsed JSON: {successful_parses}/{len(results)} ({successful_parses/len(results)*100:.1f}%)")
 
-# Save results
+# After completing evaluation, calculate and print metrics
+overall_metrics = calculate_metrics(results)
+
+# Print metrics summary
+print("\n===== EVALUATION METRICS =====")
+print(f"Total samples: {overall_metrics['overall']['total_samples']}")
+print(f"Parse success rate: {overall_metrics['overall']['parse_rate']:.2f}")
+if 'mean_f1_score' in overall_metrics['overall']:
+    print(f"Overall extraction quality (Mean F1): {overall_metrics['overall']['mean_f1_score']:.2f}")
+
+# Print field-level metrics
+print("\nField-level metrics:")
+for field, metrics in overall_metrics.get('field_metrics', {}).items():
+    print(f"  {field}:")
+    print(f"    - Populated rate: {metrics['presence_rate']:.2f}")
+    print(f"    - Accuracy: {metrics['accuracy_rate']:.2f}")
+
+# Print metrics for list fields (with F1 scores)
+print("\nList field metrics:")
+for field, metrics in overall_metrics.get('list_field_metrics', {}).items():
+    print(f"  {field}:")
+    print(f"    - Precision: {metrics['precision']:.2f}")
+    print(f"    - Recall: {metrics['recall']:.2f}")
+    print(f"    - F1 Score: {metrics['f1_score']:.2f}")
+
+# Save metrics to results file
+results_with_metrics = {
+    "evaluation_results": results,
+    "metrics": overall_metrics
+}
+
+# Save results and metrics
 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 results_file = f"{results_dir}/mistral_lora_eval_{timestamp}.json"
 with open(results_file, "w") as f:
-    json.dump(results, f, indent=2)
+    json.dump(results_with_metrics, f, indent=2)
 
-print(f"Results saved to {results_file}")
+print(f"Results and metrics saved to {results_file}")
 
 # Print some examples of generated vs expected JSON
 print("\nExamples of model outputs vs expected outputs:")
