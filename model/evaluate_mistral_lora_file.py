@@ -9,6 +9,7 @@ from peft import PeftModel
 import re
 import numpy as np
 from collections import Counter
+from tqdm import tqdm
 
 # Create results directory if it doesn't exist
 results_dir = "evaluation_results"
@@ -77,7 +78,7 @@ print(f"Using last 10% of data ({len(data_pairs)} items) for evaluation")
 # Select random samples for evaluation from the test set
 # Use a fixed seed for reproducibility
 random.seed(42)
-num_eval_samples = min(2, len(data_pairs))  # Use up to 10 samples
+num_eval_samples = min(1000, len(data_pairs))  # Evaluate up to 1000 samples
 eval_samples = random.sample(data_pairs, num_eval_samples)
 print(f"Selected {len(eval_samples)} samples for evaluation")
 
@@ -272,19 +273,18 @@ results = []
 
 # Evaluate each sample
 print("\nStarting evaluation...")
-for i, (input_text, expected_output) in enumerate(eval_samples):
-    print(f"\nProcessing example {i+1}/10:")
-    print(f"Input text length: {len(input_text)} characters")
+successful_parses = 0
+
+# Create a progress bar for evaluation
+for i, (input_text, expected_output) in enumerate(tqdm(eval_samples, desc="Evaluating samples", unit="sample")):
+    # Skip verbose output for cleaner logs
+    if i % 10 == 0:  # Only print status every 10th sample
+        print(f"\nProcessing sample {i+1}/{len(eval_samples)}")
     
     # Format messages following Mistral's chat format - exactly as in training
     messages = [
         {"role": "user", "content": input_text},
     ]
-    
-    # Print the formatted message
-    print("\nFormatted input message:")
-    print(f"Role: {messages[0]['role']}")
-    print(f"Content (first 200 chars): {messages[0]['content'][:200]}...")
     
     # Use tokenizer to encode and handle message formatting
     chat_input = tokenizer.apply_chat_template(
@@ -293,18 +293,10 @@ for i, (input_text, expected_output) in enumerate(eval_samples):
         return_tensors="pt"
     )
     
-    # Print tokenizer template
-    print(f"\nTokenizer chat template: {tokenizer.chat_template}")
-    
-    # Print encoded chat input (first few tokens)
-    print(f"Encoded chat input shape: {chat_input.shape}")
-    print(f"First few tokens: {chat_input[0, :10]}")
-    
     # Move to the same device as the model
     chat_input = chat_input.to(model.device)
     
-    # Generate text
-    print("Generating response...")
+    # Generate text - no need to print status
     with torch.no_grad():
         outputs = model.generate(
             input_ids=chat_input,
@@ -317,18 +309,19 @@ for i, (input_text, expected_output) in enumerate(eval_samples):
     # Decode the generated output
     generated_text = tokenizer.decode(outputs[0], skip_special_tokens=True)
     
-    # Print full generated text for debugging
-    print("\nFull generated text:")
-    print(generated_text)
+    # Only print full output for debugging when explicitly requested
+    if i < 2:  # Just show first two for verification
+        print("\nSample output snippet:")
+        print("-" * 40)
+        print(generated_text[:300] + "..." if len(generated_text) > 300 else generated_text)
+        print("-" * 40)
     
     # Extract just the model's response (not the input prompt)
     assistant_start = generated_text.find("<|assistant|>")
     if assistant_start != -1:
         generated_json = generated_text[assistant_start + len("<|assistant|>"):].strip()
-        print(f"\nFound assistant marker at position {assistant_start}")
     else:
         generated_json = generated_text
-        print("\nNo assistant marker found in output")
     
     # Clean up the generated JSON (extract just the JSON part)
     try:
@@ -339,29 +332,26 @@ for i, (input_text, expected_output) in enumerate(eval_samples):
         start_index = -1
         
         # Find JSON-like sections by tracking braces
-        for i, char in enumerate(generated_json):
+        for j, char in enumerate(generated_json):
             if char == '{':
                 if brace_count == 0:
-                    start_index = i
+                    start_index = j
                 brace_count += 1
             elif char == '}':
                 brace_count -= 1
                 if brace_count == 0 and start_index != -1:
                     # Found a potential JSON block
-                    json_block = generated_json[start_index:i+1]
+                    json_block = generated_json[start_index:j+1]
                     json_blocks.append(json_block)
-        
-        print(f"\nFound {len(json_blocks)} potential JSON blocks")
         
         # Try each block, preferring the last one
         valid_json = None
-        for i, block in enumerate(reversed(json_blocks)):
+        for block in reversed(json_blocks):
             try:
                 # Check if this looks like our expected schema
                 if '"experience_level"' in block:
                     parsed = json.loads(block)
                     valid_json = block
-                    print(f"Successfully parsed JSON block {len(json_blocks)-i} (counting from end)")
                     break
             except json.JSONDecodeError:
                 # Try to clean up common issues with the JSON
@@ -372,7 +362,6 @@ for i, (input_text, expected_output) in enumerate(eval_samples):
                         clean_block += '}'
                     parsed = json.loads(clean_block)
                     valid_json = clean_block
-                    print(f"Successfully parsed cleaned JSON block {len(json_blocks)-i} (counting from end)")
                     break
                 except:
                     continue
@@ -381,12 +370,13 @@ for i, (input_text, expected_output) in enumerate(eval_samples):
             generated_json = valid_json
             parsed = True
             generated_json_parsed = json.loads(generated_json)
+            successful_parses += 1
         else:
-            print("No valid JSON blocks found")
             parsed = False
             generated_json_parsed = {}
     except Exception as e:
-        print(f"Error in JSON extraction: {str(e)}")
+        if i % 10 == 0:  # Only print errors every 10th sample
+            print(f"Error in JSON extraction: {str(e)}")
         parsed = False
         generated_json_parsed = {}
     
@@ -407,23 +397,14 @@ for i, (input_text, expected_output) in enumerate(eval_samples):
     
     results.append(result)
     
-    # Print some information about the current example
-    print(f"Example {i+1} processed")
-    print(f"Parsed successfully: {parsed}")
-    if parsed:
-        # Print a few fields as examples
-        print("\nSample of extracted fields:")
-        fields_to_show = ["experience_level", "work_location", "required_minimum_degree"]
-        for field in fields_to_show:
-            if field in generated_json_parsed:
-                print(f"  {field}: {generated_json_parsed.get(field, '')}")
-    
-    print("-" * 80)
+    # Print minimal sample information (only for some samples)
+    if i % 10 == 0 and parsed:
+        print(f"Sample {i+1} successfully parsed")
 
 # Calculate overall statistics
-successful_parses = sum(1 for r in results if r["parsed_successfully"])
+parse_rate = successful_parses / len(eval_samples) * 100
 print(f"\nEvaluation complete!")
-print(f"Successfully parsed JSON: {successful_parses}/{len(results)} ({successful_parses/len(results)*100:.1f}%)")
+print(f"Successfully parsed JSON: {successful_parses}/{len(eval_samples)} ({parse_rate:.1f}%)")
 
 # After completing evaluation, calculate and print metrics
 overall_metrics = calculate_metrics(results)
