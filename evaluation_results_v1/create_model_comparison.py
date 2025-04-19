@@ -2,22 +2,13 @@ import json
 import matplotlib.pyplot as plt
 import numpy as np
 import os
-import glob
 from datetime import datetime
 
-# Find the latest JSON file in each evaluation directory
-def get_latest_json_file(directory):
-    pattern = os.path.join(directory, "*.json")
-    files = glob.glob(pattern)
-    if not files:
-        raise FileNotFoundError(f"No JSON files found in {directory}")
-    return max(files, key=os.path.getmtime)
-
-# Load model evaluation data - get latest JSON files
-t5_large_file = get_latest_json_file("evaluation_results/flan_t5_large_eval")
-t5_xl_lora_batch_2_file = get_latest_json_file("evaluation_results/flan_t5_xl_lora_batch_2_eval")
-t5_xl_lora_batch_4_file = get_latest_json_file("evaluation_results/flan_t5_xl_lora_batch_4_eval")
-mistral_lora_file = get_latest_json_file("evaluation_results/mistral_lora_eval")
+# Load model evaluation data
+t5_large_file = "evaluation_results/flan_t5_large_eval/flan_t5_large_eval_20250418_092005.json"
+t5_xl_lora_batch_2_file = "evaluation_results/flan_t5_xl_lora_batch_2_eval/flan_t5_xl_lora_eval_20250418_131856.json"
+t5_xl_lora_batch_4_file = "evaluation_results/flan_t5_xl_lora_batch_4_eval/flan_t5_xl_lora_eval_20250418_114438.json"
+mistral_lora_file = "evaluation_results/mistral_lora_eval/mistral_lora_eval_20250418_132938.json"
 
 # Ensure output directory exists
 os.makedirs("evaluation_results/comparison", exist_ok=True)
@@ -38,9 +29,6 @@ with open(mistral_lora_file, 'r') as f:
 # Model names
 models = ["T5 Large", "T5-XL LoRA Batch 2", "T5-XL LoRA Batch 4", "Mistral LoRA"]
 model_data = [t5_large_data, t5_xl_lora_batch_2_data, t5_xl_lora_batch_4_data, mistral_lora_data]
-
-# Print file paths being used
-print(f"Using files:\n- {os.path.basename(t5_large_file)}\n- {os.path.basename(t5_xl_lora_batch_2_file)}\n- {os.path.basename(t5_xl_lora_batch_4_file)}\n- {os.path.basename(mistral_lora_file)}")
 
 # Create timestamp for filenames
 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
