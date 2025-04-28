@@ -3,7 +3,7 @@ import sys
 
 try:
     # Open the file but only read a small portion
-    with open("prepared_data.json", "r") as f:
+    with open("prepared_data_train.json", "r") as f:
         # Read first 10 characters to check format
         start = f.read(10)
         f.seek(0)
