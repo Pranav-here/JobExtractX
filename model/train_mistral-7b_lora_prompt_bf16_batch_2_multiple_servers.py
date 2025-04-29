@@ -227,7 +227,7 @@ print(f"Training data size: {len(train_data)}")
 print(f"Validation data size: {len(val_data)}")
 
 # For Mistral, configure the model and dataset with appropriate sequence length
-max_length = 1536  # Adjust based on your needs and GPU memory
+max_length = 1536  
 
 print(f"Using max_length={max_length}")
 
@@ -235,7 +235,7 @@ print(f"Using max_length={max_length}")
 train_dataset = MistralDataset(train_data, tokenizer, max_length=max_length)
 val_dataset = MistralDataset(val_data, tokenizer, max_length=max_length)
 
-# Set up training arguments - matched to your Accelerate config settings
+# Set up training arguments
 training_args = TrainingArguments(
     output_dir="./mistral_7b_lora_output",
     run_name="mistral-7b-lora-job-extraction-multi-node",

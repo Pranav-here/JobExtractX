@@ -386,79 +386,58 @@ def main():
         # Example job postings
         job_texts = [
             """
-            Data Scientist
-            About the Role
-            We are looking for an experienced Data Scientist to join our Analytics team. You will work closely with our product and engineering teams to extract insights from our data and build predictive models that will be used to improve our products.
-            
-            Requirements:
-            - 3+ years of experience in data science or related field
-            - Strong programming skills in Python and SQL
-            - Experience with machine learning frameworks such as PyTorch or TensorFlow
-            - Experience with data visualization tools such as Tableau or Power BI
-            - Strong communication skills
-            
-            Nice to Have:
-            - Experience with AWS or other cloud platforms
-            - Background in A/B testing
-            - Knowledge of NLP techniques
-            
-            We offer:
-            - Competitive salary: $120,000 - $160,000 per year
-            - Health, dental, and vision insurance
-            - 401k matching
-            - Remote work options
-            - Flexible hours
-            
-            Location: San Francisco, CA or Remote
-            """,
-            
-            """
-            Front-End Developer
-            
-            We are seeking a skilled Front-End Developer with expertise in React.js to join our fast-growing startup. In this role, you will be responsible for developing and implementing user interface components using React.js and ensuring they are responsive and cross-browser compatible.
-            
-            Required Skills:
-            - 2+ years of experience with React.js
-            - Strong proficiency in JavaScript, HTML, and CSS
-            - Experience with responsive design
-            - Knowledge of modern front-end build pipelines and tools
-            
-            Benefits:
-            - Competitive salary between $90,000 - $120,000 depending on experience
-            - Comprehensive health insurance
-            - Unlimited PTO
-            - Stock options
-            - Hybrid work environment (2 days in office, 3 days remote)
-            
-            Location: Austin, TX
-            Employment Type: Full-time
-            """,
-            
-            """
-            Senior Java Backend Engineer
-            
-            Join our engineering team and help build scalable backend services for our enterprise software platform.
-            
-            Job Responsibilities:
-            - Design and develop high-performance, scalable backend services
-            - Work with microservices architecture
-            - Participate in code reviews and mentor junior engineers
-            
-            Requirements:
-            - 5+ years of experience in Java development
-            - Experience with Spring Boot and Spring Framework
-            - Knowledge of RESTful APIs and microservices architecture
-            - Proficiency in SQL and NoSQL databases (PostgreSQL, MongoDB)
-            - Understanding of cloud services (AWS/Azure/GCP)
-            
-            Qualifications:
-            - Bachelor's degree in Computer Science or related field
-            - Experience with CI/CD pipelines (Jenkins, CircleCI)
-            
-            Salary: $130,000 - $170,000 per year
-            Benefits include health insurance, 401(k) with 4% match, and annual bonuses
-            
-            Location: New York, NY (on-site, 3 days per week)
+            About the job
+About Prophecy 
+
+
+
+Prophecy is the data copilot company. Fortune 500 enterprises - including the largest institutions in banking, insurance, healthcare & life sciences, and technology - rely on Prophecy Data Transformation Copilot to accelerate AI and analytics by delivering data that is clean, trusted, and timely. Prophecy enables all data users and makes them productive by helping develop, deploy, and observe data pipelines on cloud data platforms. Organizations trust Prophecy for the most demanding workloads, including tens of thousands of data pipelines that deliver massive volumes of data for AI and analytics.
+Prophecy is backed by top VCs and investors including Insight Partners, SignalFire, Databricks, and JPMorgan Chase.
+
+
+The AI Research Engineer will:
+
+Provide hands-on technical leadership to design, develop, optimize and deploy Generative AI features, leveraging expertise in LLMs, RAGs, NLP, and AI infrastructure to optimize model quality and performance.
+Lead a strong technical team across the US and Bangalore, guiding them on state-of-the-art AI models and algorithms while establishing best data-driven development practices.
+Build agents that streamline data extraction, transformations and analysis.
+Define scalable evaluation strategies that balance AI with human reviewers.
+
+
+What You'll Need
+
+Track record of driving AI products from concept to customer adoption.
+Hands-on expertise with GenAI, LLMs, NLP, RAG, and Knowledge Graphs across the full ML lifecycle.
+Mastery of SOTA techniques to boost LLM accuracy and reliability, including fine-tuning foundation models and curating datasets.
+Experience in one or more: code generation (e.g., Codex, text-to-SQL), semantic extraction systems, knowledge graphs (e.g., Neo4j), or real-time ML products.
+Passion for rapid iteration and high-quality execution with an entrepreneurial edge.
+Up-to-date with AI trends; bonus for publications (e.g., NeurIPS, ACL).
+BS in CS or equivalent, 5-10 years of experience; MS/PhD preferred.
+
+
+Benefits and Perks 
+
+Prophecy covers 99% of employee health insurance and 75% for dependents
+Very competitive compensation
+We offer $200 per month towards wellness, gyms, massages, facials, and more!
+Celebrate your birthday and anniversary with a day off!
+Flexible PTO
+Prophecy provides employees with a $500 professional development reimbursement every year
+Company sponsored Long Term Disability and Life Insurance
+FSA/HSA
+Ability to have your fingerprint on an innovative platform
+End-to-end ownership of your projects
+And more!
+
+
+*Benefits and perks may vary per country
+
+
+
+Our Commitment to Diversity and Inclusion
+
+
+
+At Prophecy, we hire for merit and foster an inclusive culture where people from diverse backgrounds can excel and do their best work. We take great care to ensure that our hiring practices are inclusive and meet equal employment opportunity standards. Individuals looking for employment at Prophecy are considered without regard to age, color, disability, ethnicity, family or marital status, gender identity or expression, language, national origin, physical and mental ability, political affiliation, race, religion, sexual orientation, socio-economic status, veteran status, and any other protected characteristics under applicable laws.
             """
         ]
     
