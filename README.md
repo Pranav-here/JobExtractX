@@ -147,7 +147,7 @@ python evaluation_results/[model_folder]/visualize.py
 python model/infer_job_extract_models.py
 ```
 
-# GPU Resources
+# Reserved GPU
 
 ```mermaid
 gantt
