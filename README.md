@@ -44,7 +44,7 @@ python data_labeling.py
 cd JobExtractX
 ```
 
-## 1. Training Options
+## 1. Training Models
 
 ### Flan-T5 Models
 - **Flan-T5 Large** (Full model training)
