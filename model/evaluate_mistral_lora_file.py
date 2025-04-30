@@ -21,7 +21,7 @@ os.makedirs(mistral_lora_results_dir, exist_ok=True)
 
 # Set Hugging Face token as environment variable
 # Model terms of use must be accepted on Hugging Face website first
-os.environ["HUGGING_FACE_HUB_TOKEN"] = "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"  # Hugging Face token
+os.environ["HUGGING_FACE_HUB_TOKEN"] = "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"  # Hugging Face token
 os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
 
 # Load your fine-tuned model from Hugging Face

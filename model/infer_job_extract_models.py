@@ -5,7 +5,7 @@ import os
 from transformers import AutoModelForSeq2SeqLM, AutoModelForCausalLM, AutoTokenizer
 from peft import PeftModel, PeftConfig
 import re
-os.environ["HUGGING_FACE_HUB_TOKEN"] = "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"
+os.environ["HUGGING_FACE_HUB_TOKEN"] = "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"
 def fix_json_format(json_str):
     """
     Fix common JSON formatting issues in the model's output.

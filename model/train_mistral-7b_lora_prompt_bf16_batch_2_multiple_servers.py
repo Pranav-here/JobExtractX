@@ -17,7 +17,7 @@ import numpy as np
 # Set Hugging Face token as environment variable
 # Token from https://huggingface.co/settings/tokens
 # Model terms of use must be accepted on Hugging Face website first
-os.environ["HUGGING_FACE_HUB_TOKEN"] = "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"  # Hugging Face token
+os.environ["HUGGING_FACE_HUB_TOKEN"] = "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"  # Hugging Face token
 
 # Initialize accelerator
 accelerator = Accelerator()
@@ -36,7 +36,7 @@ def set_seed(seed):
 set_seed(42)  # Using a fixed seed for reproducibility
 
 # Define cache path for data
-CACHE_PATH = "prepared_data.json"
+CACHE_PATH = "prepared_data_train.json"
 
 # Only prepare data on main process and cache it
 if accelerator.is_main_process:
