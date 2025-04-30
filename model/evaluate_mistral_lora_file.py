@@ -19,9 +19,9 @@ os.makedirs(results_dir, exist_ok=True)
 mistral_lora_results_dir = os.path.join(results_dir, "mistral_lora_eval")
 os.makedirs(mistral_lora_results_dir, exist_ok=True)
 
-# Set your Hugging Face token as an environment variable
-# You need to accept the model's terms of use on the Hugging Face website first
-os.environ["HUGGING_FACE_HUB_TOKEN"] = "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"  # Your token
+# Set Hugging Face token as environment variable
+# Model terms of use must be accepted on Hugging Face website first
+os.environ["HUGGING_FACE_HUB_TOKEN"] = "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"  # Hugging Face token
 os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
 
 # Load your fine-tuned model from Hugging Face

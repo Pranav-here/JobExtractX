@@ -17,7 +17,7 @@ if len(data_pairs) > 0:
     print("First data item:", data_pairs[0])
 
 # Initialize tokenizer and model
-model_name = "google/flan-t5-large"  # You can also use flan-t5-small, flan-t5-large, etc.
+model_name = "google/flan-t5-large"  # Available models: flan-t5-small, flan-t5-large
 tokenizer = AutoTokenizer.from_pretrained(model_name)
 model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
 
@@ -140,7 +140,7 @@ print(f"Validation data size: {len(val_data)}")
 
 # For long sequences (1000+ tokens), configure the model and dataset accordingly
 max_source_length = 1536  # Increased for longer sequences
-max_target_length = 384   # Adjust based on your target length requirements
+max_target_length = 384   # Target length requirements
 
 print(f"Using max_source_length={max_source_length} and max_target_length={max_target_length}")
 

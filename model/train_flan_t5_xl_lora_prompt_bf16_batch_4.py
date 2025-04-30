@@ -43,7 +43,7 @@ model = prepare_model_for_kbit_training(model)
 lora_config = LoraConfig(
     r=8,
     lora_alpha=16,
-    target_modules=["q", "v"],  # For T5, you can use ["q", "k", "v", "o"]
+    target_modules=["q", "v"],  # T5 target modules: ["q", "k", "v", "o"]
     lora_dropout=0.1,
     bias="none",
     task_type="SEQ_2_SEQ_LM"
@@ -172,7 +172,7 @@ print(f"Validation data size: {len(val_data)}")
 
 # For long sequences (1000+ tokens), configure the model and dataset accordingly
 max_source_length = 1536  # Increased for longer sequences
-max_target_length = 384   # Adjust based on your target length requirements
+max_target_length = 384   # Target length requirements
 
 print(f"Using max_source_length={max_source_length} and max_target_length={max_target_length}")
 

@@ -10,10 +10,10 @@ from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
 from transformers import BitsAndBytesConfig
 import os
 
-# Set your Hugging Face token as an environment variable
-# Replace "your_huggingface_token" with your actual token from https://huggingface.co/settings/tokens
-# You need to accept the model's terms of use on the Hugging Face website first
-os.environ["HUGGING_FACE_HUB_TOKEN"] = "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"  # Replace with your token
+# Set Hugging Face token as environment variable
+# Token from https://huggingface.co/settings/tokens
+# Model terms of use must be accepted on Hugging Face website first
+os.environ["HUGGING_FACE_HUB_TOKEN"] = "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"  # Hugging Face token
 os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
 
 data_pairs = prepare_data()
@@ -180,7 +180,7 @@ print(f"Training data size: {len(train_data)}")
 print(f"Validation data size: {len(val_data)}")
 
 # For Mistral, configure the model and dataset with appropriate sequence length
-max_length = 1536  # Adjust based on your needs and GPU memory
+max_length = 1536  # Based on GPU memory requirements
 
 print(f"Using max_length={max_length}")
 

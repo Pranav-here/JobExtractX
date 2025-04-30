@@ -14,10 +14,10 @@ from accelerate import Accelerator
 import random
 import numpy as np
 
-# Set your Hugging Face token as an environment variable
-# Replace "your_huggingface_token" with your actual token from https://huggingface.co/settings/tokens
-# You need to accept the model's terms of use on the Hugging Face website first
-os.environ["HUGGING_FACE_HUB_TOKEN"] = "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"  # Replace with your token
+# Set Hugging Face token as environment variable
+# Token from https://huggingface.co/settings/tokens
+# Model terms of use must be accepted on Hugging Face website first
+os.environ["HUGGING_FACE_HUB_TOKEN"] = "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"  # Hugging Face token
 
 # Initialize accelerator
 accelerator = Accelerator()
