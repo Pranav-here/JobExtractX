@@ -20,3 +20,6 @@ data/__pycache__/
 /evaluate/__pycache__
 wandb*.csv
 notebooks/
+evaluate_past_experiments/
+model/past_experiments/
+model/future_experiments/
