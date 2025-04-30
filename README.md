@@ -1,88 +1,154 @@
-# Fetch Raw Data
+# JobExtractX
 
-This step allows you to fetch job listings and store them in a MongoDB database using LinkedIn's API.
+A comprehensive system for job data extraction, labeling, and analysis using advanced language models.
 
-## Getting Started
-
-### Clone the Repository
-
-First, clone the repository to your local machine using the following command:
-
+## Install Requirements
 ```bash
-git https://github.com/alexlanxy/JobExtractX.git
 cd JobExtractX
-```
-
-
-## Setup Instructions
-
-### 1. Install Requirements
-
-```bash
 pip install -r requirements.txt
 ```
 
-### 2. Configure LinkedIn Account
+# Data Pipeline
 
-Before running the script, you need to configure your LinkedIn account credentials. This is done using environment variables, which can be set in a `.env` file in the `data` directory. The `.env` file should contain your LinkedIn email and password as follows:
+## 1. Data Fetching
 
+Configure your LinkedIn credentials in the `.env` file in the `data` directory:
 ```
 LINKEDIN_EMAIL=your_linkedin_email@example.com
 LINKEDIN_PASSWORD=your_linkedin_password
 ```
 
-- If you do not have a `.env` file, you can replace the default values in `config_setup.py` with your LinkedIn email and password directly. However, using a `.env` file is recommended for security and flexibility.
-
-### 3. Run the Script
-Navigate to the `data` directory.
-To fetch job listings and store them in MongoDB, run the following command:
-
+Run the data fetching script:
 ```bash
 cd data
 python fetch_raw_data.py
 ```
 
-- By default, the script skips job IDs that already exist in the `job_raw` collection.
-- Use the `--all` flag to process all job IDs, including those that already exist:
+Optional flags:
+- `--all`: Process all job IDs, including existing ones
 
-```bash
-python fetch_raw_data.py --all
-```
+## 2. Data Labeling
 
-
-## Data Labeling
-
-### 1. Setup Requirements
-
-Ensure you have all necessary Python packages installed. If you haven't already,install the required packages:
-
-```bash
-pip install -r requirements.txt
-```
-
-### 2. Configure Environment
-
-Before running the data labeling script, ensure your environment is properly configured:
-
-- **DeepSeek API Key**: Add your DeepSeek API key to the `.env` file in the `data` directory. The `.env` file should include:
-
+Configure your DeepSeek API key in the `.env` file:
 ```
 DEEPSEEK_API_KEY=your_deepseek_api_key
 ```
 
-This key is necessary for accessing the DeepSeek service for labeling.
-
-### 3. Run the Data Labeling Script
-
-To label job data and store the results in MongoDB, run the following command:
-
+Run the labeling script:
 ```bash
 python data_labeling.py
 ```
 
-- This script will process job data, label it, and update the MongoDB collection with labeled data.
+# Model Training and Evaluation
+```bash
+cd JobExtractX
+```
 
-## GPU Reservations Timeline
+## 1. Training Options
+
+### Flan-T5 Models
+- **Flan-T5 Large** (Full model training)
+  ```bash
+  python model/train_flan_t5_large_prompt_rtx6000.py
+  ```
+- **Flan-T5 XL** (LoRA training)
+  ```bash
+  # Batch size 2
+  python model/train_flan_t5_xl_lora_prompt_bf16_batch_2.py
+  
+  # Batch size 4
+  python model/train_flan_t5_xl_lora_prompt_bf16_batch_4.py
+  ```
+
+### Mistral-7B Models
+- **Single Server** (Batch size 1)
+  ```bash
+  python model/train_mistral-7b_lora_prompt_bf16_batch_1_single_server.py
+  ```
+- **Multiple Servers** (Batch size 2)
+    1. Config deepspeed on main server, our server config:
+  
+    ```bash
+    (venv) cc@rtx-6000-17:~/JobExtractX$ accelerate config
+    -----------------------------------------------------------------------------------------------------------------------------------------------------------In which compute environment are you running?
+    This machine                                                                                                                                               
+    -----------------------------------------------------------------------------------------------------------------------------------------------------------Which type of machine are you using?                                                                                                                       
+    multi-GPU                                                                                                                                                  
+    How many different machines will you use (use more than 1 for multi-node training)? [1]: 2                                                                 
+    -----------------------------------------------------------------------------------------------------------------------------------------------------------What is the rank of this machine?                                                                                                                          
+    0                                                                                                                                                          
+    What is the IP address of the machine that will host the main process? 10.140.82.244                                                                         
+    What is the port you will use to communicate with the main process? 29500                                                                                  
+    Are all the machines on the same local network? Answer `no` if nodes are on the cloud and/or on different network hosts [YES/no]: YES                      
+    Should distributed operations be checked while running for errors? This can avoid timeout issues but will be slower. [yes/NO]: YES                         
+    Do you wish to optimize your script with torch dynamo?[yes/NO]:NO                                                                                          
+    Do you want to use DeepSpeed? [yes/NO]: yes
+    Do you want to specify a json file to a DeepSpeed config? [yes/NO]: NO
+    -----------------------------------------------------------------------------------------------------------------------------------------------------------What should be your DeepSpeed's ZeRO optimization stage?
+    2                                                                                                                                                          
+    -----------------------------------------------------------------------------------------------------------------------------------------------------------Where to offload optimizer states?                                                                                                                         
+    cpu                                                                                                                                                        
+    -----------------------------------------------------------------------------------------------------------------------------------------------------------Where to offload parameters?                                                                                                                               
+    none                                                                                                                                                       
+    How many gradient accumulation steps you're passing in your script? [1]: 8                                                                                 
+    Do you want to use gradient clipping? [yes/NO]: NO                                                                                                         
+    Do you want to enable `deepspeed.zero.Init` when using ZeRO Stage-3 for constructing massive models? [yes/NO]: NO                                          
+    Do you want to enable Mixture-of-Experts training (MoE)? [yes/NO]: NO
+    -----------------------------------------------------------------------------------------------------------------------------------------------------------Which Type of launcher do you want to use?
+    pdsh                                                                                                                                                       
+    DeepSpeed configures multi-node compute resources with hostfile. Each row is of the format `hostname slots=[num_gpus]`, e.g., `localhost slots=2`; for more information please refer official [documentation](https://www.deepspeed.ai/getting-started/#resource-configuration-multi-node). Please specify the location of hostfile: hostfile                                                                                                                                    
+    Do you want to specify exclusion filter string? [yes/NO]: NO                                                                                               
+    Do you want to specify inclusion filter string? [yes/NO]: NO                                                                                               
+    How many GPU(s) should be used for distributed training? [1]:2                                                                                             
+    -----------------------------------------------------------------------------------------------------------------------------------------------------------Do you wish to use mixed precision?
+    bf16                                                                                                                                                       
+    accelerate configuration saved at /home/cc/.cache/huggingface/accelerate/default_config.yaml  
+    ```
+
+    2. config the hostfile refered above
+    ```bash
+    10.140.82.244 slots=1
+    10.140.83.105 slots=1
+    ``` 
+    3. To avoid the port restriction problem, we disabled the firewall
+    
+    4. run this script:
+  ```bash
+  python model/train_mistral-7b_lora_prompt_bf16_batch_2_multiple_servers.py
+  ```
+
+
+Note: All trained models are uploaded to Hugging Face for easy access.
+
+## 2. Model Evaluation
+
+### Flan-T5 Evaluation
+```bash
+# Evaluate Flan-T5 Large
+python model/evaluate_flan_t5_large.py
+
+# Evaluate Flan-T5 XL
+python model/evaluate_flan_t5_xl_batch_2.py
+python model/evaluate_flan_t5_xl_batch_4.py
+```
+
+### Mistral-7B Evaluation
+```bash
+python model/evaluate_mistral_lora_file.py
+```
+
+Evaluation results are stored in `evaluation_results/` within each model folder. To visualize results:
+```bash
+python evaluation_results/[model_folder]/visualize.py
+```
+
+## 3. Inference
+```bash
+python model/infer_job_extract_models.py
+```
+
+# GPU Resources
+
 ```mermaid
 gantt
     title GPU and CPU Reservations Timeline (Chicago Time)
@@ -107,12 +173,5 @@ gantt
     RTX_6000_15 :active, 2025-04-14 13:35, 2025-04-15 13:35
     RTX_6000_17 :active, 2025-04-26 12:05, 2025-05-03 12:05
 
-
-
-
     section CPUs
     cpu_server :active, 2025-03-13 20:30, 2025-03-20 20:30
-
-
-
-
